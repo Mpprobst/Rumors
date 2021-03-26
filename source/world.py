@@ -8,8 +8,9 @@ import string
 from os import listdir
 from os.path import isfile, join
 import objects
+from objects.area import Area
 from objects.actor import Actor
-from objects.actor import Area
+from objects.rumor import Rumor
 
 ACTORS_DIR = "../resources/actors"
 AREAS_DIR = "../resources/areas"
@@ -19,6 +20,7 @@ class World():
     def __init__(self):
         self.actors = []
         self.areas = []
+        self.initial_rumors = []
 
         # create areas
         files = [file for file in listdir(AREAS_DIR)]
@@ -51,13 +53,16 @@ class World():
         for file in files:
             if not file.endswith(".txt"):
                 continue
-
+            self.initial_rumors.append(Rumor(f'{RUMORS_DIR}/{file}', self))
 
         for area in self.areas:
             area.info()
 
         for actor in self.actors:
             actor.info()
+
+        for rumor in self.initial_rumors:
+            rumor.info()
 
 
     def find_area(self, areaname):

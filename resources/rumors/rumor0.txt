@@ -1,5 +1,6 @@
+speaker Blair
 listener Blair
-subject Sam
-object Oswald
-action paid
-location Sheriff's Office
+subject Blair
+object Blair
+action drank
+location Saloon
