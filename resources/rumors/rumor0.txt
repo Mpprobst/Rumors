@@ -1,0 +1,5 @@
+listener Blair
+subject Sam
+object Oswald
+action paid
+location Sheriff's Office
