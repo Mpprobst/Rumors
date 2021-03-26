@@ -49,10 +49,14 @@ class Area():
         return self.connections
 
     def info(self):
-        occupants_list = ""
-        for occupant in self.occupants:
-            occupants_list += occupant.name + ", "
-        connection_list = ""
-        for connection in self.connections:
-            connection_list += connection.name + ", "
-        print(f'{self.name} ({self.id}) has {len(self.occupants)} occupants: {occupants_list} and is connected to: {connection_list} and noise factor: {self.noise}')
+        print(f'+---------AREA {self.id}--------+')
+        print(f'Name: {self.name}')
+        print(f'Noise Factor: {self.noise}')
+        print(f'Capacity: {len(self.occupants)} of {self.capacity}')
+        print(f'OCCUPANTS:')
+        for o in self.occupants:
+            print(f'  {o.name}')
+        print(f'CONNECTED AREAS:')
+        for c in self.connections:
+            print(f'  {c.name}')
+        print("+-----------------------+\n")

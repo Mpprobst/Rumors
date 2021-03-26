@@ -79,6 +79,6 @@ class Actor():
             for t in range(num_tabs):
                 tabs += "\t"
             print(f'  {p}:{tabs}{self.personality[p]}')
-        print("+-----------------------+")
+        print("+-----------------------+\n")
 
         #print(f'{self.name} is in {self.current_area.name} and has personality: {self.personality}')
