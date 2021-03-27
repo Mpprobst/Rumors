@@ -23,7 +23,6 @@ class Rumor():
             value = " ".join(line_array[1:])
             if item == "speaker":
                 self.speaker = world.find_actor(value)
-                print(f'speaker: {value} found {self.speaker.name}')
             elif item == "listener":
                 self.listener = world.find_actor(value)
             elif item == "subject":

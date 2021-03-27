@@ -11,6 +11,7 @@ class Actor():
     # assumes it is given a .txt filename
     def __init__(self, filename):
         self.name = ""
+        self.pronoun = ""
         self.starting_area = ""
         self.current_area = None
         self.rumors = []
@@ -36,6 +37,8 @@ class Actor():
             value = " ".join(line_array[1:])
             if item == "name":
                 self.name = value
+            elif item == "pronoun":
+                self.pronoun = value
             elif item == "area":
                 self.starting_area = value
             elif item in self.personality:
@@ -62,11 +65,12 @@ class Actor():
 
     # tell another character a rumor. pick rumor from ones the agent knows
     def gossip(self, listener):
+        # TODO: get a character in the current location that is trusted and tell them a rumor
         self.action_log.append("gossip")
 
     def info(self):
         print("+---------ACTOR---------+")
-        print(f'Name: {self.name}')
+        print(f'Name: {self.name} ({self.pronoun})')
         print(f'Current Location: {self.current_area.name}')
         print(f'PERSONALITY:')
         for p in self.personality:
@@ -80,9 +84,9 @@ class Actor():
         print(f'RELATIONSHIPS')
         for i in range(len(self.relationships)):
             r = self.relationships[i]
-            print(f'{i}) {r.name}')
-            print(f'  trust:         {r.trust}' +
-                  f'  admiration:    {r.admiration}' +
-                  f'  love:          {r.love}'
+            print(f'{i+1}. {r.character.name}')
+            print(f'  trust:                {r.trust}\n' +
+                  f'  admiration:           {r.admiration}\n' +
+                  f'  love:                 {r.love}'
             )
         print("+-----------------------+\n")

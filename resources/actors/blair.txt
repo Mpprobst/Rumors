@@ -1,4 +1,5 @@
-name Blair
+name Blair the Barkeep
+pronoun T
 area Saloon
 trustworthy 6
 talkative 9

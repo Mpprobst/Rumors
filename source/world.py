@@ -39,7 +39,6 @@ class World():
                 continue
             new_area = Area(i, f'{AREAS_DIR}/{files[i]}')
             if new_area.name == "Placeholder":
-
                 self.default_area = new_area
             else:
                 self.areas.append(new_area)
@@ -57,6 +56,8 @@ class World():
                 self.default_actor = new_actor
             else:
                 self.actors.append(new_actor)
+        return 0
+
     # all actors generated, initialize their relationships
     def init_relationships(self):
         for actor in self.actors:
@@ -64,6 +65,7 @@ class World():
             others.remove(actor)
             for other in others:
                 actor.start_relationship(other)
+        return 0
 
     # pick some rumors out and give them to characters
     def init_rumors(self):
@@ -72,19 +74,20 @@ class World():
             if not file.endswith(".txt"):
                 continue
             self.initial_rumors.append(Rumor(f'{RUMORS_DIR}/{file}', self))
+        return 0
 
     def find_area(self, areaname):
         for area in self.areas:
             if area.name == areaname:
                 return area
-        print(f'ERROR: {areaname} not found')
+        #print(f'ERROR: {areaname} not found')
         return self.default_area
 
     def find_actor(self, actorname):
         for actor in self.actors:
             if actor.name == actorname:
                 return actor
-        print(f'ERROR: {actorname} not found')
+        #print(f'ERROR: {actorname} not found')
         return self.default_actor
 
     def info(self):
