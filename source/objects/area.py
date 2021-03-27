@@ -19,7 +19,7 @@ class Area():
         for line in f:
             line_array = line.split()
             item = line_array[0]
-            value = "".join(line_array[1:])
+            value = " ".join(line_array[1:])
             if item == "name":
                 self.name = value
             elif item == "cap":
@@ -60,3 +60,4 @@ class Area():
         for c in self.connections:
             print(f'  {c.name}')
         print("+-----------------------+\n")
+        return 0

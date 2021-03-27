@@ -20,9 +20,10 @@ class Rumor():
         for line in f:
             line_array = line.split()
             item = line_array[0]
-            value = "".join(line_array[1:])
+            value = " ".join(line_array[1:])
             if item == "speaker":
                 self.speaker = world.find_actor(value)
+                print(f'speaker: {value} found {self.speaker.name}')
             elif item == "listener":
                 self.listener = world.find_actor(value)
             elif item == "subject":

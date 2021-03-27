@@ -33,7 +33,7 @@ class Actor():
         for line in f:
             line_array = line.split()
             item = line_array[0]
-            value = "".join(line_array[1:])
+            value = " ".join(line_array[1:])
             if item == "name":
                 self.name = value
             elif item == "area":
@@ -49,7 +49,6 @@ class Actor():
     # do nothing
     def wait(self):
         self.action_log.append("wait")
-        return 0
 
     # given an Area object
     def move(self, area):
@@ -64,7 +63,6 @@ class Actor():
     # tell another character a rumor. pick rumor from ones the agent knows
     def gossip(self, listener):
         self.action_log.append("gossip")
-        return 0
 
     def info(self):
         print("+---------ACTOR---------+")
@@ -79,6 +77,12 @@ class Actor():
             for t in range(num_tabs):
                 tabs += "\t"
             print(f'  {p}:{tabs}{self.personality[p]}')
+        print(f'RELATIONSHIPS')
+        for i in range(len(self.relationships)):
+            r = self.relationships[i]
+            print(f'{i}) {r.name}')
+            print(f'  trust:         {r.trust}' +
+                  f'  admiration:    {r.admiration}' +
+                  f'  love:          {r.love}'
+            )
         print("+-----------------------+\n")
-
-        #print(f'{self.name} is in {self.current_area.name} and has personality: {self.personality}')

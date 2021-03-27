@@ -21,40 +21,73 @@ class World():
         self.actors = []
         self.areas = []
         self.initial_rumors = []
+        self.default_actor = None
+        self.default_area = None
 
-        # create areas
+        self.init_areas()
+        self.init_actors()
+        self.init_relationships()
+        self.init_rumors()
+
+        self.info()
+
+    # create areas
+    def init_areas(self):
         files = [file for file in listdir(AREAS_DIR)]
         for i in range(len(files)):
             if not files[i].endswith(".txt"):
                 continue
             new_area = Area(i, f'{AREAS_DIR}/{files[i]}')
-            self.areas.append(new_area)
+            if new_area.name == "Placeholder":
 
-        # create actors
+                self.default_area = new_area
+            else:
+                self.areas.append(new_area)
+        return 0
+
+    # create actors
+    def init_actors(self):
         files = [file for file in listdir(ACTORS_DIR)]
         for file in files:
             if not file.endswith(".txt"):
                 continue
-            new_actor = Actor(f'{ACTORS_DIR}/{files[i]}')
-            # find starting area
-            start_area = self.areas[0]
+            new_actor = Actor(f'{ACTORS_DIR}/{file}')
             new_actor.move(self.find_area(new_actor.starting_area))
-            self.actors.append(new_actor)
-
-        # all actors generated, initialize their relationships
+            if new_actor.name == "Default":
+                self.default_actor = new_actor
+            else:
+                self.actors.append(new_actor)
+    # all actors generated, initialize their relationships
+    def init_relationships(self):
         for actor in self.actors:
             others = self.actors.copy()
             others.remove(actor)
             for other in others:
                 actor.start_relationship(other)
 
-        # pick some rumors out and give them to characters
+    # pick some rumors out and give them to characters
+    def init_rumors(self):
         files = [file for file in listdir(RUMORS_DIR)]
         for file in files:
             if not file.endswith(".txt"):
                 continue
             self.initial_rumors.append(Rumor(f'{RUMORS_DIR}/{file}', self))
 
+    def find_area(self, areaname):
+        for area in self.areas:
+            if area.name == areaname:
+                return area
+        print(f'ERROR: {areaname} not found')
+        return self.default_area
+
+    def find_actor(self, actorname):
+        for actor in self.actors:
+            if actor.name == actorname:
+                return actor
+        print(f'ERROR: {actorname} not found')
+        return self.default_actor
+
+    def info(self):
         for area in self.areas:
             area.info()
 
@@ -63,18 +96,3 @@ class World():
 
         for rumor in self.initial_rumors:
             rumor.info()
-
-
-    def find_area(self, areaname):
-        for area in self.areas:
-            if area.name == areaname:
-                return area
-
-        print(f'ERROR: {areaname} not found')
-
-    def find_actor(self, actorname):
-        for actor in self.actors:
-            if actor.name == actorname:
-                return actor
-
-        print(f'ERROR: {actorname} not found')

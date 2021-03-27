@@ -9,6 +9,6 @@ class Relationship():
     def __init__(self, _character):
         self.character = _character
         # TODO: skew these random values with the personalities of the characters involved
-        self.trust = random.range(0, 9, 1)
-        self.admiration = random.range(0, 9, 1)
-        self.love = random.range(0, 9, 1)
+        self.trust = random.randint(0, 9)
+        self.admiration = random.randint(0, 9)
+        self.love = random.randint(0, 9)
