@@ -1,0 +1,12 @@
+name Sam the Sheriff
+pronoun F
+area Sheriff's Office
+trustworthy 2
+talkative 3
+gullible 3
+nosy 5
+loyalty 1
+fame 9
+morality 2
+memory 5
+perception 8

@@ -1,0 +1,11 @@
+name Default
+area Placeholder
+trustworthy 0
+talkative 0
+gullible 0
+nosy 0
+loyalty 0
+fame 0
+morality 0
+memory 0
+perception 0

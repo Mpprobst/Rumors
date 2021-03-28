@@ -1,0 +1,6 @@
+speaker Blair
+listener Blair
+subject Sam
+object Oswald
+action drank
+location Sheriff's Office
