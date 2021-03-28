@@ -1,0 +1,4 @@
+name Jail
+cap 4
+noise 1
+connections Main Road, Saloon

@@ -15,6 +15,7 @@ from objects.rumor import Rumor
 ACTORS_DIR = "../resources/actors"
 AREAS_DIR = "../resources/areas"
 RUMORS_DIR = "../resources/rumors"
+SIM_TIME = 2
 
 class World():
     def __init__(self):
@@ -23,13 +24,37 @@ class World():
         self.initial_rumors = []
         self.default_actor = None
         self.default_area = None
+        self.time = 0
 
         self.init_areas()
+        self.connect_areas()
         self.init_actors()
         self.init_relationships()
         self.init_rumors()
 
         self.info()
+
+        self.simulate()
+
+    def play(self):
+        # wait for player to input, then do a time_step
+        done = False
+        while not done:
+            self.time_step()
+
+    # simulate time before the experience begins
+    def simulate(self):
+        while self.time < SIM_TIME:
+            self.time_step()
+
+    def time_step(self):
+        # process player input if needed
+        print(f'time step: {self.time}')
+        for actor in self.actors:
+            actor.take_action()
+
+        self.time += 1
+        return 0
 
     # create areas
     def init_areas(self):
@@ -44,6 +69,16 @@ class World():
                 self.areas.append(new_area)
         return 0
 
+    def connect_areas(self):
+        for area in self.areas:
+            connections = []    # new array to give references to area objects
+            for c in area.get_connections():
+                other = self.find_area(c)
+                connections.append(other)
+
+            area.connections = connections
+        return 0
+
     # create actors
     def init_actors(self):
         files = [file for file in listdir(ACTORS_DIR)]
@@ -52,7 +87,7 @@ class World():
                 continue
             new_actor = Actor(f'{ACTORS_DIR}/{file}')
             new_actor.move(self.find_area(new_actor.starting_area))
-            if new_actor.name == "Default":
+            if new_actor.name == "Default Character":
                 self.default_actor = new_actor
             else:
                 self.actors.append(new_actor)

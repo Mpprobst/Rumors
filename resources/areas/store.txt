@@ -1,0 +1,4 @@
+name General Store
+cap 8
+noise 4
+connections Main Road

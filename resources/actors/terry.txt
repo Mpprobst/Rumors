@@ -1,0 +1,12 @@
+name Terry the Teaspiller
+pronoun T
+area Saloon
+trustworthy 1
+talkative 9
+gullible 9
+nosy 9
+loyalty 1
+fame 5
+morality 5
+memory 8
+perception 8

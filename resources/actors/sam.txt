@@ -1,6 +1,6 @@
-name Sam the Sheriff
+name Sheriff Sam
 pronoun F
-area Sheriff's Office
+area Jail
 trustworthy 2
 talkative 3
 gullible 3

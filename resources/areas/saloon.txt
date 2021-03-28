@@ -1,3 +1,4 @@
 name Saloon
 cap 10
-noise 7
+noise 6
+connections Main Road

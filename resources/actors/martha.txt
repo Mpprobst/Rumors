@@ -1,0 +1,11 @@
+name Martha the Merchant
+area General Store
+trustworthy 3
+talkative 8
+gullible 2
+nosy 6
+loyalty 3
+fame 7
+morality 3
+memory 4
+perception 7

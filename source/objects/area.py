@@ -26,6 +26,19 @@ class Area():
                 self.capacity = int(value)
             elif item == "noise":
                 self.noise = int(value)
+            elif item == "connections":
+                area = ""
+                idx = 0
+                while idx < len(value):
+                    if value[idx] == ',':
+                        self.connect_area(area)
+                        area = ""
+                        idx += 1
+                    else:
+                        area += value[idx]
+                    idx += 1
+                self.connect_area(area)
+
 
     def is_full(self):
         return self.capacity >= len(self.occupants)
@@ -41,9 +54,10 @@ class Area():
     def occupants(self):
         return self.occupants
 
-    # area is the id of the area connected to this one
+    # area is the name of the area connected to this one
     def connect_area(self, area):
-        self.connections.append(area)
+        if area not in self.connections:
+            self.connections.append(area)
 
     def get_connections(self):
         return self.connections
@@ -53,10 +67,10 @@ class Area():
         print(f'Name: {self.name}')
         print(f'Noise Factor: {self.noise}')
         print(f'Capacity: {len(self.occupants)} of {self.capacity}')
-        print(f'OCCUPANTS:')
+        print(f'\nOCCUPANTS:')
         for o in self.occupants:
             print(f'  {o.name}')
-        print(f'CONNECTED AREAS:')
+        print(f'\nCONNECTED AREAS:')
         for c in self.connections:
             print(f'  {c.name}')
         print("+-----------------------+\n")

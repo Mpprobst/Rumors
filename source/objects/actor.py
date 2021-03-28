@@ -46,11 +46,16 @@ class Actor():
             else:
                 print(f'WARNING: trait {item} is not a valid trait')
 
-    def start_relationship(self, character):
-        self.relationships.append(Relationship(character))
+    def start_relationship(self, char):
+        self.relationships.append(Relationship(self, char))
+
+    def take_action(self):
+        # choose wait, move, or gosssip
+        self.wait()
 
     # do nothing
     def wait(self):
+        print(f'{self.name} waited')
         self.action_log.append("wait")
 
     # given an Area object
@@ -58,21 +63,26 @@ class Actor():
         if area == None:
             return
         if self.current_area != None:
+            print(f'{self.name} moved from {self.current_area.name} to {area.name}')
             self.action_log.append("move")
             self.current_area.exit(self)
         self.current_area = area
         area.enter(self)
 
     # tell another character a rumor. pick rumor from ones the agent knows
-    def gossip(self, listener):
+    def gossip(self):
+        listener = None
+        for char in self.current_area.occupants:
+            listener = char
         # TODO: get a character in the current location that is trusted and tell them a rumor
         self.action_log.append("gossip")
+        print(f'')
 
     def info(self):
         print("+---------ACTOR---------+")
         print(f'Name: {self.name} ({self.pronoun})')
         print(f'Current Location: {self.current_area.name}')
-        print(f'PERSONALITY:')
+        print(f'\nPERSONALITY:')
         for p in self.personality:
             num_tabs = 4 - math.floor((len(p)+3) / 4)
             if num_tabs == 1:
@@ -81,12 +91,12 @@ class Actor():
             for t in range(num_tabs):
                 tabs += "\t"
             print(f'  {p}:{tabs}{self.personality[p]}')
-        print(f'RELATIONSHIPS')
+        print(f'\nRELATIONSHIPS')
         for i in range(len(self.relationships)):
             r = self.relationships[i]
             print(f'{i+1}. {r.character.name}')
-            print(f'  trust:                {r.trust}\n' +
-                  f'  admiration:           {r.admiration}\n' +
-                  f'  love:                 {r.love}'
+            print(f'   trust:               {r.trust}\n' +
+                  f'   admiration:          {r.admiration}\n' +
+                  f'   love:                {r.love}'
             )
         print("+-----------------------+\n")

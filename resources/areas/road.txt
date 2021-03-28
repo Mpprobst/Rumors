@@ -1,0 +1,4 @@
+name Main Road
+cap 25
+noise 8
+connections Saloon, Jail, General Store 

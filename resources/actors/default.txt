@@ -1,4 +1,5 @@
-name Default
+name Default Character
+pronoun T
 area Placeholder
 trustworthy 0
 talkative 0

@@ -1,6 +1,6 @@
-speaker Blair
-listener Blair
-subject Sam
-object Oswald
+speaker Blair the Barkeep
+listener Blair the Barkeep
+subject Sheriff Sam
+object Oswald the Outlaw
 action drank
-location Sheriff's Office
+location Jail
