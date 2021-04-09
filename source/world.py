@@ -203,7 +203,11 @@ class World():
         for file in files:
             if not file.endswith(".txt"):
                 continue
-            self.initial_rumors.append(Rumor(file=f'{RUMORS_DIR}/{file}', world=self))
+            rumor = Rumor(file=f'{RUMORS_DIR}/{file}', world=self)
+            rumor.speaker.hear_rumor(rumor)
+            rumor.listener.hear_rumor(rumor)
+            self.initial_rumors.append(rumor)
+
         return 0
 
     def find_area(self, areaname):
