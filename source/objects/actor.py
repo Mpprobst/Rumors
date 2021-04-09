@@ -77,7 +77,11 @@ class Actor():
             p[1] = 0
             p[2] += self.personality["nosy"]- 4
             p[3] = 0
-        print(f'{self.name} action probs: {p}')
+
+        if self.shortname == "Blair":
+            p[2] = 0
+
+        #print(f'{self.name} action probs: {p}')
         total = sum(p)
         rand = random.randint(0, total)
         action = 0
@@ -99,7 +103,7 @@ class Actor():
 
     # do nothing
     def wait(self):
-        print(f'{self.name} waited')
+        #print(f'{self.name} waited')
         self.action_log.append("wait")
 
     # given an Area object
@@ -133,7 +137,7 @@ class Actor():
 
         listener.hear_rumor(self.select_rumor(listener))
         self.action_log.append(f'tell {listener.shortname} a rumor')
-        print(f'{self.shortname} told {listener.shortname} a rumor')
+        #print(f'{self.shortname} told {listener.shortname} a rumor')
 
     def wait_to_eavsedrop(self):
         # wait until all other characeters have done their action, then find a rumor to hear
@@ -143,12 +147,43 @@ class Actor():
     def eavsedrop(self):
         # find someone to listen to based on relationships
         self.eavsedropping = False
-        print(f'{self.name} eavsedrops')
+        #print(f'{self.name} eavsedrops')
 
+    def ask(self, character, rumor):
+        if rumor:
+            # get a rumor
+            for rumor in self.rumors:
+                names = []
+                names.append(character.shortname)
+                for object in rumor.objects:
+                    names.append(object.shortname)
+                if character.shortname in names:
+                    return rumor
+        else:
+            for r in self.relationships:
+                if r.character.shortname == character.shortname:
+                    return r
+        return None
 
-    def info(self, options=None):
-        if options == None:
-            options = ["p", "s", "r"]
+    def get_pronoun1(self):
+        if self.pronoun == "F":
+            return "she"
+        elif self.pronoun == "M":
+            return "he"
+        else:
+            return "they"
+
+    def get_pronoun2(self):
+        if self.pronoun == "F":
+            return "her"
+        elif self.pronoun == "M":
+            return "him"
+        else:
+            return "them"
+
+    def info(self, options=[]):
+        if len(options) == 0:
+            options = ["p", "ru", "re"]
         print("+---------ACTOR---------+")
         print(f'Name: {self.name} ({self.pronoun})')
         print(f'Current Location: {self.current_area.name}')
@@ -162,16 +197,16 @@ class Actor():
                 for t in range(num_tabs):
                     tabs += "\t"
                 print(f'  {p}:{tabs}{self.personality[p]}')
-        if "ru" in options:
+        if "re" in options:
             print(f'\nRELATIONSHIPS')
             for i in range(len(self.relationships)):
                 r = self.relationships[i]
-                print(f'{i+1}. {r.character.name}')
+                print(f'{i+1}. {r.character.shortname}')
                 print(f'   trust:               {r.trust}\n' +
                       f'   admiration:          {r.admiration}\n' +
                       f'   love:                {r.love}'
                 )
-        if "re" in options:
+        if "ru" in options:
             print(f'\nRUMORS:')
             for i in range(len(self.rumors)):
                 rumor = self.rumors[i]

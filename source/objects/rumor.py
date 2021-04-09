@@ -45,7 +45,6 @@ class Rumor():
                 elif item == "location":
                     self.location = world.find_area(value)
 
-
     def info(self, options=None):
         #print(f'+---------RUMOR---------+')
         #print(self.speaker.name)
