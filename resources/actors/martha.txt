@@ -1,4 +1,5 @@
 name Martha the Merchant
+pronoun F
 area General Store
 trustworthy 3
 talkative 8

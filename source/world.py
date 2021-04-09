@@ -40,19 +40,29 @@ class World():
         # wait for player to input, then do a time_step
         done = False
         while not done:
+            in_val = input("What do you do? ")
+            if in_val == "quit":
+                done = True
+                break
             self.time_step()
 
     # simulate time before the experience begins
     def simulate(self):
         while self.time < SIM_TIME:
             self.time_step()
+        self.play()
 
     def time_step(self):
         # process player input if needed
         print(f'time step: {self.time}')
+        eavsedroppers = []
         for actor in self.actors:
             actor.take_action()
+            if actor.eavsedropping:
+                eavsedroppers.append(actor)
 
+        for e in eavsedroppers:
+            e.eavsedrop()
         self.time += 1
         return 0
 

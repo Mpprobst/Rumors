@@ -6,12 +6,14 @@ import string
 from objects.relationship import Relationship
 from objects.area import Area
 import math
+import random
 
 class Actor():
     # assumes it is given a .txt filename
     def __init__(self, filename):
         self.name = ""
         self.pronoun = ""
+        self.eavsedropping = False
         self.starting_area = ""
         self.current_area = None
         self.rumors = []
@@ -50,8 +52,40 @@ class Actor():
         self.relationships.append(Relationship(self, char))
 
     def take_action(self):
-        # choose wait, move, or gosssip
-        self.wait()
+        # choose wait, move, or gossip
+        # probability array [p_wait, p_gossip, p_move, p_eavsedrop]
+        p = [5, 5, 5, 5]
+
+        # talkative people will want to tell a rumor
+        p[1] += self.personality["talkative"] - 4
+
+        # if there are people in the area, nosy people are more likely to eavsedrop
+        if len(self.current_area.occupants) >= 2:
+            p[3] += self.personality["nosy"] - 4
+        else:
+            # if the person is alone, don't gossip, but potentially move
+            p[1] = 0
+            p[2] += self.personality["nosy"]- 4
+            p[3] = 0
+
+        total = sum(p)
+        rand = random.randint(0, total)
+        action = 0
+        for i in range(len(p)):
+            if rand < p[i]:
+                action = i
+                break
+            else:
+                rand -= p[i]
+
+        if action == 0:
+            self.wait()
+        elif action == 1:
+            self.gossip()
+        elif action == 2:
+            self.move()
+        elif action == 3:
+            self.wait_to_eavsedrop()
 
     # do nothing
     def wait(self):
@@ -59,24 +93,37 @@ class Actor():
         self.action_log.append("wait")
 
     # given an Area object
-    def move(self, area):
+    def move(self, area=None):
         if area == None:
-            return
+            area = self.current_area.connections[random.randint(0, len(self.current_area.connections)-1)]
         if self.current_area != None:
-            print(f'{self.name} moved from {self.current_area.name} to {area.name}')
             self.action_log.append("move")
-            self.current_area.exit(self)
+            self.current_area.leave(self)
         self.current_area = area
         area.enter(self)
+        print(f'{self.name} moved from {self.current_area.name} to {area.name}')
+        self.action_log.append(f'move to {self.current_area.name}')
 
     # tell another character a rumor. pick rumor from ones the agent knows
     def gossip(self):
-        listener = None
-        for char in self.current_area.occupants:
-            listener = char
-        # TODO: get a character in the current location that is trusted and tell them a rumor
-        self.action_log.append("gossip")
-        print(f'')
+        listeners = self.current_area.occupants
+        listeners.remove(self)
+        listener = listeners[random.randint(0, len(listeners))]
+        self.current_area.occupants.append(self)
+
+        self.action_log.append(f'tell {listener.name} a rumor')
+        print(f'{self.name} told {listener.name} a rumor')
+
+    def wait_to_eavsedrop(self):
+        # wait until all other characeters have done their action, then find a rumor to hear
+        self.eavsedropping = True
+        self.action_log.append("eavsedrop")
+
+    def eavsedrop(self):
+        # find someone to listen to based on relationships
+        self.eavsedropping = False
+        print(f'{self.name} eavsedrops')
+
 
     def info(self):
         print("+---------ACTOR---------+")
