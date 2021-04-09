@@ -8,10 +8,11 @@ from objects.actor import Area
 from objects.actor import Actor
 
 class Rumor():
-    def __init__(self, file=None, world=None, speaker=None, listener=None, subject=None, objects=[], action=None, location=None):
-        self.speaker = speaker         # who told this instance of the rumor
+    def __init__(self, id, file=None, world=None, speaker=None, listener=None, subject=None, objects=[], action=None, location=None):
+        self.id = id                    # identifier for the rumor
+        self.speaker = speaker          # who told this instance of the rumor
         self.listener = listener        # who heard this instance of the rumor
-        self.subject = subject         # character who is doing something
+        self.subject = subject          # character who is doing something
         self.objects = objects          # character acted upon
         self.action = action            # what the subject is doing to the object
         self.location = location        # where the action took place
@@ -44,6 +45,8 @@ class Rumor():
                     self.action = value
                 elif item == "location":
                     self.location = world.find_area(value)
+        self.listener.hear_rumor(self)
+        self.speaker.hear_rumor(self)
 
     def info(self, options=None):
         #print(f'+---------RUMOR---------+')

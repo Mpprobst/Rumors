@@ -58,7 +58,17 @@ class Actor():
         self.relationships.append(Relationship(self, char))
 
     def hear_rumor(self, rumor):
-        self.rumors.append(rumor)
+        hadHeard = False
+        for r in self.rumors:
+            if rumor.id == r.id:
+                # I've heard this before
+                rumor = r
+                hadHeard = True
+                break
+
+        if not hadHeard:
+            self.rumors.append(rumor)
+
         # TODO: now adjust relationships
 
     def take_action(self):
@@ -77,6 +87,9 @@ class Actor():
             p[1] = 0
             p[2] += self.personality["nosy"]- 4
             p[3] = 0
+
+        if len(self.rumors) == 0:
+            p[1] = 0
 
         if self.shortname == "Blair":
             p[2] = 0
@@ -118,9 +131,9 @@ class Actor():
         area.enter(self)
         self.action_log.append(f'move to {self.current_area.name}')
 
-    def select_rumor(self, listener):
+    def select_rumor(self, listener, about=None):
         # based on listener, select a rumor, and modify it.
-
+        # if listener is the player, tell them something about a specific character if specified
         # TODO: possibly make up a rumor if there is nothing to gossip about
 
         if len(self.rumors) > 0:
@@ -149,16 +162,19 @@ class Actor():
         self.eavsedropping = False
         #print(f'{self.name} eavsedrops')
 
-    def ask(self, character, rumor):
-        if rumor:
+    def ask(self, character, isRumor):
+        if isRumor:
             # get a rumor
+            rumors = []
+            # filter the rumors
             for rumor in self.rumors:
                 names = []
-                names.append(character.shortname)
                 for object in rumor.objects:
                     names.append(object.shortname)
                 if character.shortname in names:
-                    return rumor
+                    rumors.append(rumor)
+            if len(rumors) > 0:
+                return random.choice(rumors)
         else:
             for r in self.relationships:
                 if r.character.shortname == character.shortname:
@@ -211,5 +227,5 @@ class Actor():
             for i in range(len(self.rumors)):
                 rumor = self.rumors[i]
                 if rumor != None:
-                    print(f'{i+1}. {rumor.info()}')
+                    rumor.info()
         print("+-----------------------+\n")

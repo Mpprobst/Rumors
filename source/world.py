@@ -203,9 +203,9 @@ class World():
         for file in files:
             if not file.endswith(".txt"):
                 continue
-            rumor = Rumor(file=f'{RUMORS_DIR}/{file}', world=self)
-            rumor.speaker.hear_rumor(rumor)
-            rumor.listener.hear_rumor(rumor)
+            rumor = Rumor(len(self.initial_rumors), file=f'{RUMORS_DIR}/{file}', world=self)
+            #rumor.speaker.hear_rumor(rumor)
+            #rumor.listener.hear_rumor(rumor)
             self.initial_rumors.append(rumor)
 
         return 0
