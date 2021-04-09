@@ -41,9 +41,23 @@ class World():
         done = False
         while not done:
             in_val = input("What do you do? ")
-            if in_val == "quit":
-                done = True
-                break
+            args = in_val.split()
+            if len(args) > 0:
+                if args[0] == "quit":
+                    done = True
+                    print("Thanks for playing!")
+                    break
+                elif args[0] == "info":
+                    if args[1] == "all":
+                        self.info()
+                    else:
+                        obj = self.find_actor(args[1])
+                        if obj == self.default_actor:
+                            obj = self.find_area(args[1])
+                            if obj == self.default_area:
+                                continue
+                        obj.info(args[2:])
+                        continue
             self.time_step()
 
     # simulate time before the experience begins
@@ -64,6 +78,7 @@ class World():
         for e in eavsedroppers:
             e.eavsedrop()
         self.time += 1
+        print("")
         return 0
 
     # create areas
@@ -118,7 +133,7 @@ class World():
         for file in files:
             if not file.endswith(".txt"):
                 continue
-            self.initial_rumors.append(Rumor(f'{RUMORS_DIR}/{file}', self))
+            self.initial_rumors.append(Rumor(file=f'{RUMORS_DIR}/{file}', world=self))
         return 0
 
     def find_area(self, areaname):
@@ -130,7 +145,7 @@ class World():
 
     def find_actor(self, actorname):
         for actor in self.actors:
-            if actor.name == actorname:
+            if actor.name == actorname or actor.shortname == actorname:
                 return actor
         #print(f'ERROR: {actorname} not found')
         return self.default_actor
@@ -142,5 +157,6 @@ class World():
         for actor in self.actors:
             actor.info()
 
+        print("initial rumors")
         for rumor in self.initial_rumors:
             rumor.info()

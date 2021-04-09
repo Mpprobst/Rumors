@@ -62,7 +62,7 @@ class Area():
     def get_connections(self):
         return self.connections
 
-    def info(self):
+    def info(self, options=None):
         print(f'+---------AREA {self.id}--------+')
         print(f'Name: {self.name}')
         print(f'Noise Factor: {self.noise}')

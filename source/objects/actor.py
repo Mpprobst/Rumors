@@ -12,6 +12,7 @@ class Actor():
     # assumes it is given a .txt filename
     def __init__(self, filename):
         self.name = ""
+        self.shortname = ""
         self.pronoun = ""
         self.eavsedropping = False
         self.starting_area = ""
@@ -39,6 +40,11 @@ class Actor():
             value = " ".join(line_array[1:])
             if item == "name":
                 self.name = value
+                names = value.split()
+                if "the" in names:
+                    self.shortname = names[0]
+                else:
+                    self.shortname = names[1]
             elif item == "pronoun":
                 self.pronoun = value
             elif item == "area":
@@ -50,6 +56,10 @@ class Actor():
 
     def start_relationship(self, char):
         self.relationships.append(Relationship(self, char))
+
+    def hear_rumor(self, rumor):
+        self.rumors.append(rumor)
+        # TODO: now adjust relationships
 
     def take_action(self):
         # choose wait, move, or gossip
@@ -67,7 +77,7 @@ class Actor():
             p[1] = 0
             p[2] += self.personality["nosy"]- 4
             p[3] = 0
-
+        print(f'{self.name} action probs: {p}')
         total = sum(p)
         rand = random.randint(0, total)
         action = 0
@@ -95,24 +105,35 @@ class Actor():
     # given an Area object
     def move(self, area=None):
         if area == None:
-            area = self.current_area.connections[random.randint(0, len(self.current_area.connections)-1)]
+            area = random.choice(self.current_area.connections)
         if self.current_area != None:
             self.action_log.append("move")
             self.current_area.leave(self)
+        #print(f'{self.name} moved from {self.current_area.name} to {area.name}')
         self.current_area = area
         area.enter(self)
-        print(f'{self.name} moved from {self.current_area.name} to {area.name}')
         self.action_log.append(f'move to {self.current_area.name}')
+
+    def select_rumor(self, listener):
+        # based on listener, select a rumor, and modify it.
+
+        # TODO: possibly make up a rumor if there is nothing to gossip about
+
+        if len(self.rumors) > 0:
+            return random.choice(self.rumors)
+
+        return None
 
     # tell another character a rumor. pick rumor from ones the agent knows
     def gossip(self):
         listeners = self.current_area.occupants
         listeners.remove(self)
-        listener = listeners[random.randint(0, len(listeners))]
+        listener = random.choice(listeners)
         self.current_area.occupants.append(self)
 
-        self.action_log.append(f'tell {listener.name} a rumor')
-        print(f'{self.name} told {listener.name} a rumor')
+        listener.hear_rumor(self.select_rumor(listener))
+        self.action_log.append(f'tell {listener.shortname} a rumor')
+        print(f'{self.shortname} told {listener.shortname} a rumor')
 
     def wait_to_eavsedrop(self):
         # wait until all other characeters have done their action, then find a rumor to hear
@@ -125,25 +146,35 @@ class Actor():
         print(f'{self.name} eavsedrops')
 
 
-    def info(self):
+    def info(self, options=None):
+        if options == None:
+            options = ["p", "s", "r"]
         print("+---------ACTOR---------+")
         print(f'Name: {self.name} ({self.pronoun})')
         print(f'Current Location: {self.current_area.name}')
-        print(f'\nPERSONALITY:')
-        for p in self.personality:
-            num_tabs = 4 - math.floor((len(p)+3) / 4)
-            if num_tabs == 1:
-                num_tabs += 1
-            tabs = ""
-            for t in range(num_tabs):
-                tabs += "\t"
-            print(f'  {p}:{tabs}{self.personality[p]}')
-        print(f'\nRELATIONSHIPS')
-        for i in range(len(self.relationships)):
-            r = self.relationships[i]
-            print(f'{i+1}. {r.character.name}')
-            print(f'   trust:               {r.trust}\n' +
-                  f'   admiration:          {r.admiration}\n' +
-                  f'   love:                {r.love}'
-            )
+        if "p" in options:
+            print(f'\nPERSONALITY:')
+            for p in self.personality:
+                num_tabs = 4 - math.floor((len(p)+3) / 4)
+                if num_tabs == 1:
+                    num_tabs += 1
+                tabs = ""
+                for t in range(num_tabs):
+                    tabs += "\t"
+                print(f'  {p}:{tabs}{self.personality[p]}')
+        if "ru" in options:
+            print(f'\nRELATIONSHIPS')
+            for i in range(len(self.relationships)):
+                r = self.relationships[i]
+                print(f'{i+1}. {r.character.name}')
+                print(f'   trust:               {r.trust}\n' +
+                      f'   admiration:          {r.admiration}\n' +
+                      f'   love:                {r.love}'
+                )
+        if "re" in options:
+            print(f'\nRUMORS:')
+            for i in range(len(self.rumors)):
+                rumor = self.rumors[i]
+                if rumor != None:
+                    print(f'{i+1}. {rumor.info()}')
         print("+-----------------------+\n")
