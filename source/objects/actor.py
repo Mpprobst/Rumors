@@ -70,7 +70,7 @@ class Actor():
                 # I've heard this before
                 rumor = r
                 hadHeard = True
-                break
+                return
 
         if not hadHeard:
             self.rumors.append(rumor)
@@ -81,30 +81,48 @@ class Actor():
         # based on personality, choose how much to believe the rumor
         belief = 5
         subj_rel = self.get_relationship(rumor.subject.shortname)
+
+        if action == None or subj_rel == None:
+            return
+
         belief -= self.personality["gullible"] - subj_rel.trust
-        belief += subj_rel.admiration - (9-self.personality["loyal"])
+        belief += subj_rel.admiration - (9-self.personality["loyalty"])
         belief += subj_rel.love - 5
 
+        print(f'{rumor.speaker.shortname} is telling {self.shortname} that {rumor.subject.shortname} {rumor.action} {rumor.objects[0].shortname}')
         speaker_rel = self.get_relationship(rumor.speaker.shortname)
-        if belief > 10:
-            belief = 2
-            rel.trust += 0
+        if speaker_rel != None:
+            str = f'1. Relationship of {self.shortname} and {speaker_rel.character.shortname}\n  {speaker_rel.trust} {speaker_rel.admiration} {speaker_rel.love}'
+            if belief > 10:
+                belief = 2
+                speaker_rel.Trust(1)
+                print(f'{self.shortname} really believes it!')
 
-        elif belief > 5:
-            belief = 1
-        else:
-            belief = 0
-            rel.trust -= 1
+            elif belief > 5:
+                belief = 1
+                print(f'{self.shortname} believes it.')
+            elif belief > 0:
+                belief = 0
+                speaker_rel.Trust(-1)
+                print(f'{self.shortname} doesn\'t believe it!')
+            else:
+                belief = 0
+                speaker_rel.Trust(-2)
+                speaker_rel.Admiration(-1)
+                print(f'{self.shortname} doesn\'t believe it at all!')
+            print(str)
+            print(f'-->\n  {speaker_rel.trust} {speaker_rel.admiration} {speaker_rel.love}')
 
-
-        subj_rel.trust += action.trust * belief
-        subj_rel.admire += action.admire * belief
-        subj_rel.love += action.love * belief
+        print(f'2. Relationship of {self.shortname} and {subj_rel.character.shortname}\n  {subj_rel.trust} {subj_rel.admiration} {subj_rel.love}')
+        subj_rel.Trust(int(action.trust * belief / 2))
+        subj_rel.Admiration(int(action.admire * belief / 2))
+        subj_rel.Love(int(action.love * belief / 2))
+        print(f'-->\n  {subj_rel.trust} {subj_rel.admiration} {subj_rel.love}\n')
 
     def take_action(self):
         # choose wait, move, or gossip
         # probability array [p_wait, p_gossip, p_move, p_eavsedrop]
-        p = [5, 5, 5, 5]
+        p = [5, 5, 0, 5]
 
         # talkative people will want to tell a rumor
         p[1] += self.personality["talkative"] - 4
@@ -115,7 +133,7 @@ class Actor():
         else:
             # if the person is alone, don't gossip, but potentially move
             p[1] = 0
-            p[2] += self.personality["nosy"]- 4
+            #p[2] += self.personality["nosy"]- 4
             p[3] = 0
 
         if len(self.rumors) == 0:
@@ -181,7 +199,10 @@ class Actor():
         listener = self.select_listener(listeners)
         self.current_area.occupants.append(self)
 
-        listener.hear_rumor(self.select_rumor(listener))
+        rumor = self.select_rumor(listener)
+        rumor = rumor.clone(rumor)
+        rumor.speaker = self
+        listener.hear_rumor(rumor)
         self.action_log.append(f'tell {listener.shortname} a rumor')
 
     def wait_to_eavsedrop(self):

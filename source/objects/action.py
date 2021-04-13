@@ -27,10 +27,9 @@ class Action():
             f = open(file, "r")
             i = 0
             for line in f:
-                text = line
                 line = line.split()
                 if i == 0:
-                    self.name = text
+                    self.name = " ".join(line[:])
                 elif i == 1:
 
                     self.r_trust = int(line[0])
@@ -44,3 +43,12 @@ class Action():
                     self.admire = int(line[1])
                     self.love = int(line[2])
                 i += 1
+
+    def info(self):
+        print(f'-----ACTION-----\n'+
+              f'{self.name}\n' +
+              f'requirements\n  trust:\t{self.r_trust}\n  admire:\t{self.r_admire}\n  love:\t{self.r_love}  \n' +
+              f'descriptors\n  moral:\t{self.morality}\n  taboo:\t{self.taboo}  \n' +
+              f'affector\n  trust:\t{self.trust}\n  admire:\t{self.admire}\n  love:\t{self.love}  \n' +
+              f'-----------------\n'
+        )

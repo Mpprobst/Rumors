@@ -56,6 +56,15 @@ class Relationship():
         str = f'Oh, {self.character.name}? Well, {respect_str}, {"and" if trust >= respect else "but"} {trust_str}, {"and" if (trust > feel and trust != 1) else "but"} {feel_str}.'
         return str
 
+    def Trust(self, value):
+        self.trust = self.clamp(self.trust + value)
+
+    def Admiration(self, value):
+        self.admiration = self.clamp(self.admiration + value)
+
+    def Love(self, value):
+        self.love = self.clamp(self.love + value)
+
     def clamp(self, value):
         if value > 9:
             value = 9

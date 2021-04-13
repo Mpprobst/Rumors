@@ -15,7 +15,7 @@ from objects.rumor import Rumor
 
 ACTORS_DIR = "../resources/actors"
 AREAS_DIR = "../resources/areas"
-ACTIONS_DIR = "../resources/areas"
+ACTIONS_DIR = "../resources/actions"
 RUMORS_DIR = "../resources/rumors"
 SIM_TIME = 2
 
@@ -36,7 +36,7 @@ class World():
         self.init_relationships()
         self.init_rumors()
 
-        self.info()
+        #self.info()
 
         self.simulate()
 
@@ -185,7 +185,8 @@ class World():
             if not file.endswith(".txt"):
                 continue
             new_actor = Actor(f'{ACTORS_DIR}/{file}', self)
-            new_actor.move(self.find_area(new_actor.starting_area))
+            #new_actor.move(self.find_area(new_actor.starting_area))
+            new_actor.move(self.find_area("Saloon"))
             if new_actor.name == "Default Character":
                 self.default_actor = new_actor
             else:
@@ -250,6 +251,9 @@ class World():
 
         for actor in self.actors:
             actor.info()
+
+        for action in self.actions:
+            action.info()
 
         print("initial rumors")
         for rumor in self.initial_rumors:
