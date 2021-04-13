@@ -10,10 +10,11 @@ import random
 
 class Actor():
     # assumes it is given a .txt filename
-    def __init__(self, filename):
+    def __init__(self, filename, world):
         self.name = ""
         self.shortname = ""
         self.pronoun = ""
+        self.world = world
         self.eavsedropping = False
         self.starting_area = ""
         self.current_area = None
@@ -57,6 +58,11 @@ class Actor():
     def start_relationship(self, char):
         self.relationships.append(Relationship(self, char))
 
+    def get_relationship(self, name):
+        for r in self.relationships:
+            if r.character.shortname == name:
+                return r
+
     def hear_rumor(self, rumor):
         hadHeard = False
         for r in self.rumors:
@@ -70,6 +76,30 @@ class Actor():
             self.rumors.append(rumor)
 
         # TODO: now adjust relationships
+        # find the action object in the rumor
+        action = self.world.find_action(rumor.action)
+        # based on personality, choose how much to believe the rumor
+        belief = 5
+        subj_rel = self.get_relationship(rumor.subject.shortname)
+        belief -= self.personality["gullible"] - subj_rel.trust
+        belief += subj_rel.admiration - (9-self.personality["loyal"])
+        belief += subj_rel.love - 5
+
+        speaker_rel = self.get_relationship(rumor.speaker.shortname)
+        if belief > 10:
+            belief = 2
+            rel.trust += 0
+
+        elif belief > 5:
+            belief = 1
+        else:
+            belief = 0
+            rel.trust -= 1
+
+
+        subj_rel.trust += action.trust * belief
+        subj_rel.admire += action.admire * belief
+        subj_rel.love += action.love * belief
 
     def take_action(self):
         # choose wait, move, or gossip
@@ -131,6 +161,9 @@ class Actor():
         area.enter(self)
         self.action_log.append(f'move to {self.current_area.name}')
 
+    def select_listener(self, listeners):
+        return random.choice(listeners)
+
     def select_rumor(self, listener, about=None):
         # based on listener, select a rumor, and modify it.
         # if listener is the player, tell them something about a specific character if specified
@@ -145,12 +178,11 @@ class Actor():
     def gossip(self):
         listeners = self.current_area.occupants
         listeners.remove(self)
-        listener = random.choice(listeners)
+        listener = self.select_listener(listeners)
         self.current_area.occupants.append(self)
 
         listener.hear_rumor(self.select_rumor(listener))
         self.action_log.append(f'tell {listener.shortname} a rumor')
-        #print(f'{self.shortname} told {listener.shortname} a rumor')
 
     def wait_to_eavsedrop(self):
         # wait until all other characeters have done their action, then find a rumor to hear
@@ -176,9 +208,7 @@ class Actor():
             if len(rumors) > 0:
                 return random.choice(rumors)
         else:
-            for r in self.relationships:
-                if r.character.shortname == character.shortname:
-                    return r
+            self.get_relationship(character.shortname)
         return None
 
     def get_pronoun1(self):

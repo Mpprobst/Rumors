@@ -10,17 +10,20 @@ from os.path import isfile, join
 import objects
 from objects.area import Area
 from objects.actor import Actor
+from objects.action import Action
 from objects.rumor import Rumor
 
 ACTORS_DIR = "../resources/actors"
 AREAS_DIR = "../resources/areas"
+ACTIONS_DIR = "../resources/areas"
 RUMORS_DIR = "../resources/rumors"
 SIM_TIME = 2
 
 class World():
     def __init__(self):
-        self.actors = []
         self.areas = []
+        self.actors = []
+        self.actions = []
         self.initial_rumors = []
         self.default_actor = None
         self.default_area = None
@@ -29,6 +32,7 @@ class World():
         self.init_areas()
         self.connect_areas()
         self.init_actors()
+        self.init_actions()
         self.init_relationships()
         self.init_rumors()
 
@@ -180,12 +184,22 @@ class World():
         for file in files:
             if not file.endswith(".txt"):
                 continue
-            new_actor = Actor(f'{ACTORS_DIR}/{file}')
+            new_actor = Actor(f'{ACTORS_DIR}/{file}', self)
             new_actor.move(self.find_area(new_actor.starting_area))
             if new_actor.name == "Default Character":
                 self.default_actor = new_actor
             else:
                 self.actors.append(new_actor)
+        return 0
+
+    def init_actions(self):
+        files = [file for file in listdir(ACTIONS_DIR)]
+        for file in files:
+            if not file.endswith(".txt"):
+                continue
+            else:
+                new_action = Action(f'{ACTIONS_DIR}/{file}')
+                self.actions.append(new_action)
         return 0
 
     # all actors generated, initialize their relationships
@@ -223,6 +237,12 @@ class World():
                 return actor
         print(f'ERROR: {actorname} not found')
         return self.default_actor
+
+    def find_action(self, actionname):
+        for action in self.actions:
+            if action.name == actionname:
+                return action
+        print(f'ERROR: {actionname} not found')
 
     def info(self):
         for area in self.areas:
