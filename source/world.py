@@ -37,7 +37,7 @@ class World():
         self.init_relationships()
         self.init_rumors()
 
-        #self.info()
+        self.info()
         self.player_actor.move(self.find_area("Saloon"))
 
         self.simulate()

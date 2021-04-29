@@ -63,6 +63,6 @@ class Action():
               f'{self.name}\n' +
               f'requirements\n  trust:\t{self.r_trust}\n  admire:\t{self.r_admire}\n  love:\t{self.r_love}  \n' +
               f'descriptors\n  moral:\t{self.morality}\n  taboo:\t{self.taboo}  \n' +
-              f'affector(sub,obj)\n  trust:\t{self.subject_trust}, {self.object_trust}\n  admire:\t{self.object_admire}, {self.subject_trust}\n  love:\t{self.subject_love}, {self.object_love}  \n' +
+              f'affector(sub,obj)\n  trust:\t{self.subject_trust}, {self.object_trust}\n  admire:\t{self.object_admire}, {self.subject_trust}\n  love:\t\t{self.subject_love}, {self.object_love}  \n' +
               f'-----------------\n'
         )
