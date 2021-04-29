@@ -17,7 +17,7 @@ ACTORS_DIR = "../resources/actors"
 AREAS_DIR = "../resources/areas"
 ACTIONS_DIR = "../resources/actions"
 RUMORS_DIR = "../resources/rumors"
-SIM_TIME = 2
+SIM_TIME = 100
 
 class World():
     def __init__(self):
@@ -28,6 +28,7 @@ class World():
         self.default_actor = None
         self.default_area = None
         self.time = 0
+        self.player_actor = Actor(world=self)
 
         self.init_areas()
         self.connect_areas()
@@ -37,6 +38,7 @@ class World():
         self.init_rumors()
 
         #self.info()
+        self.player_actor.move(self.find_area("Saloon"))
 
         self.simulate()
 
@@ -52,30 +54,30 @@ class World():
                     print("Thanks for playing!")
                     break
                 elif args[0] == "help":
-                    print("+--------------------HELP--------------------+")
+                    print("+--------------------------------------------------HELP--------------------------------------------------+")
                     print(f'Here is a list of the valid commands:\n' +
                           f' - <character1>, <question> <character2> <?>: talk to a specific character about something \n' +
                           f'\t<question>: ask anyting! Say things like: \"do you like\", \"how do you feel about\" \"tell me about\"\n'+
                           f'\t\tbut if the action is too complex for the character, they will not understand it\n' +
                           f'\t <character2>: a specific character pertaining to your question.\n\t\tThis can be the same as <character1> if you enter \"yourself\".\n\t\tYou can also use yourself as the second character.\n\t\tIf the character doesn\'t exist, the character will let you know.\n' +
-                          f'\t<?>: put a question mark if you want to ask a question. Otherwise it is assumed you are stating a fact. \n' +
-                          f' - gossip <character> <rumor>: tell a character a rumor. if <character> is empty, Blair is default\n' +
+                          f'\t<?>: put a question mark if you want to ask a question. \n\t\tOtherwise it is assumed you are spreading a rumor. \n' +
+                          #f' - gossip <character> <rumor>: tell a character a rumor. if <character> is empty, Blair is default\n' +
                           f'\t<rumor>: Say anything! Only valid actions and characters will be registered.\n' +
                           f'\tlist of valid actions:\n' +
                           f' - look: get info on your current area\n' +
-                          f' - info <shortname> <options separated by spaces>: get info about something.\n\t\tenter the shortname of the item of interest or \"all\" to get all info\n' +
+                          f' - info <shortname> <options separated by spaces>: get info about something.\n\t\tenter the shortname of the item of interest, \"actors\", \"areas\", or \"all\" to get all info\n' +
                           f'\t<character> p re ru: print character info. p - personality, re - relationships, ru - rumors known.\n' +
                           f'\t<area> o c: print area info. o - occupants, c - connected areas.\n'
                           f'\t you can enter no additional options to get all info about the designated object\n' +
                           f' - quit: ends the experience\n' +
                           f' - help: print the help menu\n'
                     )
-                    print("+---------------------------------------------+")
+                    print("+--------------------------------------------------------------------------------------------------------+")
                 elif args[0][len(args[0])-1] == ",":
                     # we are prompting a character for something
                     character1 = self.find_actor(args[0].replace(',', ''))
                     char2 = args[len(args)-1]
-                    question = " ".join(args[2:len(args)-2])
+                    question = " ".join(args[1:len(args)-2])
                     isQ = False
                     if '?' in char2:
                         isQ = True
@@ -84,12 +86,21 @@ class World():
                     character2 = self.find_actor(char2)
 
                     if isQ:
-                        if "tell" in question or "know" in question:
-                            rumor = character1.ask(character2, True)
-                            if rumor != None:
-                                rumor.info()
+                        if  "who" in question:
+                            char_array = []
+                            for rel in character1.relationships:
+                                char_array.append(rel.character.shortname)
+                            char_array[len(char_array)-1] = f'and {char_array[len(char_array)-1]}'
+                            print(f'{character1.shortname}: Well, there\'s {", ".join(char_array)}')
+                        elif "tell" in question or "know" in question:
+                            if char2 == "yourself" or char2 == "you":
+                                character1.introduce()
                             else:
-                                print(f'{character1.name}: Sorry. I don\'t know anything about {char2}')
+                                rumor = character1.ask(character2, True)
+                                if rumor != None:
+                                    rumor.info()
+                                else:
+                                    print(f'{character1.shortname}: Sorry. I don\'t know anything about {char2}')
 
                         else:
                             relationship = character1.ask(character2, False)
@@ -100,17 +111,10 @@ class World():
 
                     else:
                         # parse the rumor
-                        #character1.hear_rumor()
-                        print("TODO: Parse a rumor from user")
+                        player_rumor = Rumor.parse(self.player_actor, args, self)
+                        character1.hear_rumor(player_rumor, True)
+                        # based on their reaction, produce some response
 
-                elif args[0] == "gossip":
-                    rumorIdx = 2
-                    character1 = self.find_actor(args[1])
-                    if character1 == self.default_actor:
-                        character1 = self.find_actor("Blair")
-                        rumorIdx = 1
-                    rumor = " ".join(args[rumorIdx:])
-                    # parse the rumor
                 elif args[0] == "look":
                     area = self.find_area("Saloon")
                     patrons = []
@@ -124,6 +128,12 @@ class World():
                 elif args[0] == "info":
                     if args[1] == "all":
                         self.info()
+                    elif args[1] == "actors":
+                        for actor in self.actors:
+                            actor.info(args[2:])
+                    elif args[1] == "areas":
+                        for area in self.areas:
+                            area.info(args[2:])
                     else:
                         obj = self.find_actor(args[1])
                         if obj == self.default_actor:
@@ -152,7 +162,7 @@ class World():
         for e in eavsedroppers:
             e.eavsedrop()
         self.time += 1
-        print("")
+        #print("")
         return 0
 
     # create areas
@@ -206,6 +216,7 @@ class World():
     # all actors generated, initialize their relationships
     def init_relationships(self):
         for actor in self.actors:
+            actor.start_relationship(self.player_actor)
             others = self.actors.copy()
             others.remove(actor)
             for other in others:

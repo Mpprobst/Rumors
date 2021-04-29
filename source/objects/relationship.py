@@ -10,14 +10,30 @@ class Relationship():
         self.character = char2
 
         # determine trust based on char1's gullibile trait and char2's trustworthy trait
-        trust_val = int(char1.personality["gullible"] / 3) + int(char2.personality["trustworthy"] / 3) + random.randint(0, 5)
+        trust_val = int(char1.personality["gullible"] / 3) + int(char2.personality["trustworthy"] / 3) + random.randint(0, 6) - int((9 - char1.personality["opinion"]) * char1.personality["gullible"]/9)
         self.trust = self.clamp(trust_val)
         # determine admiration based on how well the two character's morality align and how famous the other character is
-        admire_val = int((9 - char1.personality["morality"] - char2.personality["morality"]) / 3) + int(char2.personality["fame"] / 3) + random.randint(0, 5)
+        admire_val = int((9 - (char1.personality["morality"] - char2.personality["morality"])) / 3) + int(char2.personality["fame"] / 3) + random.randint(0, 6) - int((9 - char1.personality["opinion"]) * char1.personality["gullible"]/9)
         self.admiration = self.clamp(admire_val)
         # determine based on similarities in talkativeness and loyalty
-        love_val = int((9 - char1.personality["talkative"] - char2.personality["talkative"]) / 3) + int(char2.personality["loyalty"] / 3) + random.randint(0, 5)
+        love_val = int((9 - (char1.personality["talkative"] - char2.personality["talkative"])) / 3) + int(char2.personality["loyalty"] / 3) + random.randint(0, 6) - int((9 - char1.personality["opinion"]) * char1.personality["gullible"]/9)
         self.love = self.clamp(love_val)
+
+    def likes(self):
+        if self.love > 7 or self.admiration > 7 or self.trust > 7:
+            return True
+        like_ct = 0
+        if self.love >= 5:
+            like_ct += 1
+        if self.admiration >= 5:
+            like_ct += 1
+        if self.trust >= 5:
+            like_ct += 1
+
+        if like_ct >= 2:
+            return True
+
+        return False
 
     def info(self):
         trust = 0

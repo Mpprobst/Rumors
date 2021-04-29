@@ -2,6 +2,8 @@
 actor.py
 Purpose: Implements the data structures and mechanics of an actor
 """
+
+import sys
 import string
 from objects.relationship import Relationship
 from objects.area import Area
@@ -10,10 +12,11 @@ import random
 
 class Actor():
     # assumes it is given a .txt filename
-    def __init__(self, filename, world):
-        self.name = ""
-        self.shortname = ""
-        self.pronoun = ""
+    def __init__(self, filename=None, world=None):
+        self.name = "You, the Player"
+        self.shortname = "You"
+        self.pronoun = "T"
+        self.description = ""               # a description of the character
         self.world = world
         self.eavsedropping = False
         self.starting_area = ""
@@ -22,38 +25,42 @@ class Actor():
         self.action_log = []
         self.relationships = []     # list of relationships the character has with all other characters. TODO: find where to initialize this list
         # dictionary of personality traits that influence the characters decisions. Always a value between 0 and 9
-        self.personality = { "trustworthy" : 0, # how likely others are to tell this character a rumor
-                             "talkative" : 0,   # how likely the character is to tell a rumor
-                             "gullible" : 0,    # how likely the character is to believe a rumor
-                             "nosy" : 0,        # how likely the character is to seek out rumors from others
-                             "loyalty" : 0,     # how likely a character is to tell a bad rumor about a character they like
+        self.personality = { "trustworthy" : 5, # how likely others are to tell this character a rumor
+                             "talkative" : 5,   # how likely the character is to tell a rumor
+                             "gullible" : 5,    # how likely the character is to believe a rumor
+                             "nosy" : 5,        # how likely the character is to seek out rumors from others
+                             "loyalty" : 5,     # how likely a character is to tell a bad rumor about a character they like
                              "fame" : 0,        # how well known the character is
-                             "morality" : 0,    # how 'good' the character is. this influences the likelihood to mutate a rumor. 0-3 is evil, 4-5 is neutral, 6-9 is good
-                             "memory" : 0,      # how good a character is at retelling a rumor
-                             "perception" : 0   # how good a character is at understanding a rumor
+                             "morality" : 5,    # how 'good' the character is. this influences the likelihood to mutate a rumor. 0-3 is evil, 4-5 is neutral, 6-9 is good
+                             "memory" : 5,      # how good a character is at retelling a rumor
+                             "perception" : 5,  # how good a character is at understanding a rumor
+                             "opinion" : 5      # what characters generally think about this one
                             }
 
         # initialize the character
-        f = open(filename, "r")
-        for line in f:
-            line_array = line.split()
-            item = line_array[0]
-            value = " ".join(line_array[1:])
-            if item == "name":
-                self.name = value
-                names = value.split()
-                if "the" in names:
-                    self.shortname = names[0]
+        if filename != None:
+            f = open(filename, "r")
+            for line in f:
+                line_array = line.split()
+                item = line_array[0]
+                value = " ".join(line_array[1:])
+                if item == "name":
+                    self.name = value
+                    names = value.split()
+                    if "the" in names:
+                        self.shortname = names[0]
+                    else:
+                        self.shortname = names[1]
+                elif item == "pronoun":
+                    self.pronoun = value
+                elif item == "area":
+                    self.starting_area = value
+                elif item in self.personality:
+                    self.personality[item] = int(value)
+                elif item == "description":
+                    self.description = value
                 else:
-                    self.shortname = names[1]
-            elif item == "pronoun":
-                self.pronoun = value
-            elif item == "area":
-                self.starting_area = value
-            elif item in self.personality:
-                self.personality[item] = int(value)
-            else:
-                print(f'WARNING: trait {item} is not a valid trait')
+                    print(f'WARNING: trait {item} is not a valid trait')
 
     def start_relationship(self, char):
         self.relationships.append(Relationship(self, char))
@@ -63,66 +70,122 @@ class Actor():
             if r.character.shortname == name:
                 return r
 
-    def hear_rumor(self, rumor):
+    def hear_rumor(self, rumor, force_believe=False):
         hadHeard = False
+        r_idx = 0
         for r in self.rumors:
             if rumor.id == r.id:
                 # I've heard this before
-                rumor = r
+                rumor = r.clone(r)
                 hadHeard = True
-                return
+                break
+            r_idx +=1
 
         if not hadHeard:
             self.rumors.append(rumor)
 
         # TODO: now adjust relationships
         # find the action object in the rumor
-        action = self.world.find_action(rumor.action)
+        if isinstance(rumor.action, str):
+            return
+
+        if rumor.action == None:
+            return
+
+        action = self.world.find_action(rumor.action.name)
         # based on personality, choose how much to believe the rumor
         belief = 5
         subj_rel = self.get_relationship(rumor.subject.shortname)
+        obj_rels = []
+        for obj in rumor.objects:
+            obj_rels.append(self.get_relationship(obj.shortname))
 
         if action == None or subj_rel == None:
             return
 
-        belief -= self.personality["gullible"] - subj_rel.trust
-        belief += subj_rel.admiration - (9-self.personality["loyalty"])
-        belief += subj_rel.love - 5
-
-        print(f'{rumor.speaker.shortname} is telling {self.shortname} that {rumor.subject.shortname} {rumor.action} {rumor.objects[0].shortname}')
         speaker_rel = self.get_relationship(rumor.speaker.shortname)
+        s = ""
         if speaker_rel != None:
-            str = f'1. Relationship of {self.shortname} and {speaker_rel.character.shortname}\n  {speaker_rel.trust} {speaker_rel.admiration} {speaker_rel.love}'
-            if belief > 10:
-                belief = 2
-                speaker_rel.Trust(1)
-                print(f'{self.shortname} really believes it!')
+            s = f'1. Relationship of {self.shortname} and {speaker_rel.character.shortname}\n  {speaker_rel.trust} {speaker_rel.admiration} {speaker_rel.love}'
 
-            elif belief > 5:
-                belief = 1
-                print(f'{self.shortname} believes it.')
-            elif belief > 0:
-                belief = 0
-                speaker_rel.Trust(-1)
-                print(f'{self.shortname} doesn\'t believe it!')
+        if not force_believe:
+            if rumor.action.morality > 5:
+                belief += self.personality["gullible"] - (9 - subj_rel.trust)
+                belief += subj_rel.admiration - (9 - self.personality["loyalty"])
+                belief += subj_rel.love - 4
             else:
-                belief = 0
-                speaker_rel.Trust(-2)
-                speaker_rel.Admiration(-1)
-                print(f'{self.shortname} doesn\'t believe it at all!')
-            print(str)
-            print(f'-->\n  {speaker_rel.trust} {speaker_rel.admiration} {speaker_rel.love}')
+                belief += self.personality["gullible"] - (9 - subj_rel.trust)         # gullible characters believe things
+                belief += 9 - subj_rel.admiration - (9 - self.personality["loyalty"]) # if low resepect and disloyal
+                belief += (9 - subj_rel.love) - 3                                     # if character hates other, believe it
+
+            print(f'{rumor.speaker.shortname} is telling {self.shortname} that {rumor.subject.shortname} {rumor.action.name} {rumor.objects[0].shortname}')
+            if speaker_rel != None:
+                if belief > 10:
+                    belief = 2
+                    speaker_rel.Trust(1)
+                    self.rumors[r_idx] = rumor
+                    print(f'{self.shortname} really believes it!')
+                elif belief > 5:
+                    belief = 1
+                    self.rumors[r_idx] = rumor
+                    print(f'{self.shortname} believes it.')
+                elif belief > 0:
+                    belief = 0
+                    speaker_rel.Trust(-1)
+                    print(f'{self.shortname} doesn\'t believe it!')
+                else:
+                    belief = 0
+                    speaker_rel.Trust(-2)
+                    speaker_rel.Admiration(-1)
+                    print(f'{self.shortname} doesn\'t believe it at all!')
+                print(s)
+                print(f'-->\n  {speaker_rel.trust} {speaker_rel.admiration} {speaker_rel.love}')
+        else:
+            belief = 1
+        # relationship between the listener and the subject and objects need to change based on
+        # their respective current relationships and the affectors of the action
+        # ex: if someone the listener doesn't like does something intimate with someone
+        # the listener does like, then the listener should like the person they like less.
+        # if the listener loves the one character and hates the other, the listener should
+        # hate the person they hate even more if the action between them is nefarious.
+        # if the action between the subject and objects is a good action, the listener might
+        # begin to like the character they hate. Special case is that there is nothing wrong with
+        # love, but if the subject and object are in love and the listener loves one of them
+        # then they can be jealous and begin to like them less.
 
         print(f'2. Relationship of {self.shortname} and {subj_rel.character.shortname}\n  {subj_rel.trust} {subj_rel.admiration} {subj_rel.love}')
-        subj_rel.Trust(int(action.trust * belief / 2))
-        subj_rel.Admiration(int(action.admire * belief / 2))
-        subj_rel.Love(int(action.love * belief / 2))
+
+        # listener should update their opinions on the characters invloved in the rumor
+        # based on how they align with thier values
+        morals_align = True
+        if rumor.action.morality >= 5 and self.personality["morality"] < 5:
+            morals_align = False
+        if rumor.action.morality < 5 and self.personality["morality"] >= 5:
+            morals_align = False
+
+        moral = self.personality["morality"] - action.morality
+        if not morals_align:
+            belief *= -1
+        #elif abs(moral) >= 5: # someone with perfect morals (9) and a neutral action (5) shouln't think too differently
+        #    belief *= -1
+
+        subj_rel.Trust(int(action.subject_trust * belief / 2))
+        subj_rel.Admiration(int(action.subject_admire * belief / 2))
+        subj_rel.Love(int(action.subject_love * belief / 2))
+
+        for rel in obj_rels:
+            if rel == None:
+                continue
+            rel.Trust(int(action.object_trust * belief / 2))
+            rel.Admiration(int(action.object_admire * belief / 2))
+            rel.Love(int(action.object_love * belief / 2))
+
         print(f'-->\n  {subj_rel.trust} {subj_rel.admiration} {subj_rel.love}\n')
 
     def take_action(self):
         # choose wait, move, or gossip
         # probability array [p_wait, p_gossip, p_move, p_eavsedrop]
-        p = [5, 5, 0, 5]
+        p = [5, 5, 0, 5]    # TODO: change p_move in final version when there are more characters
 
         # talkative people will want to tell a rumor
         p[1] += self.personality["talkative"] - 4
@@ -182,9 +245,149 @@ class Actor():
     def select_listener(self, listeners):
         return random.choice(listeners)
 
+    def mutate_character(self, og_char, likes):
+        rels = self.relationships.copy()
+        for r in rels:
+            if likes and not r.likes():
+                rels.remove(r)
+            elif not likes and r.likes():
+                rels.remove(r)
+
+        if len(rels) > 0:
+            rel = random.choice(rels)
+            return rel.character
+        return og_char
+
+
+    def mutate_action(self, og_action, like_sub, like_obj):
+        sub_thresh = og_action.sum_sub()
+        obj_thresh = og_action.sum_obj()
+        actions = self.world.actions.copy()
+
+        for a in actions:
+            sub_aff = a.sum_sub()
+            obj_aff = a.sum_obj()
+
+            # subject is liked, remove immoral or worse actions
+            if like_sub and (a.morality < 4 or sub_thresh > sub_aff):
+                actions.remove(a)
+            # subject is hated, remove good or better actions
+            elif not like_sub and (a.morality > 5 or sub_thresh < sub_aff):
+                actions.remove(a)
+            # object is liked, remove immoral or worse actions
+            elif like_obj and (a.morality < 4 or obj_thresh > obj_aff):
+                actions.remove(a)
+            # object is hated, remove good or better actions
+            elif not like_obj and (a.morality > 5 or obj_thresh < obj_aff):
+                actions.remove(a)
+
+        mutate_action = og_action
+        if len(actions) > 0:
+            mutate_action = random.choice(actions)
+
+        return mutate_action
+
     def select_rumor(self, listener, about=None):
-        # based on listener, select a rumor, and modify it.
         # if listener is the player, tell them something about a specific character if specified
+        rumors = self.rumors.copy()
+        if about != None:
+            for rumor in rumors:
+                object_names = []
+                for obj in rumor.objects:
+                    object_names.append(obj.shortname)
+                if rumor.subject.shortname != about.shortname or about.shortname not in object_names:
+                    rumors.remove(rumor)
+
+        # based on listener, select a rumor
+        listener_rel = self.get_relationship(listener.shortname)
+        if listener_rel == None:
+            return None
+        t_thresh = listener_rel.trust           # threshold for action trust
+        a_thresh = listener_rel.admiration      # threshold for action admiration
+        l_thresh = listener_rel.love            # threshold for action love
+        # 2 or more thresholds must be exceeded to tell the rumor
+        for rumor in rumors:
+            thresh_ct = 0
+            if rumor.action.r_trust >= t_thresh:
+                thresh_ct += 1
+            if rumor.action.r_admire >= a_thresh:
+                thresh_ct += 1
+            if rumor.action.r_love >= l_thresh:
+                thresh_ct += 1
+
+            if thresh_ct < 1:
+                rumors.remove(rumor)
+
+        ru = None
+        if len(rumors) > 0:
+            ru = random.choice(rumors)
+        else:
+            return ru
+
+        sub_rel = self.get_relationship(ru.subject.shortname)
+        obj_rels = []
+
+        if sub_rel == None:
+            return ru
+
+        like_ct = 0
+        for obj in ru.objects:
+            rel = self.get_relationship(obj.shortname)
+            if rel == None:
+                continue
+            obj_rels.append((rel, rel.likes()))
+            if rel.likes():
+                like_ct += 1
+
+        likes_obj = like_ct >= len(ru.objects) / 2
+        likes_sub = sub_rel.likes()
+        # if loyal:
+        if self.personality["loyalty"] >= 5 and ru.action.morality <= 3:
+            # if character likes a character that would be negatively affected, choose a better action
+            if likes_sub:
+                if self.personality["morality"] < 5:
+                    # change the character that is negatively affected with one they dont like.
+                    ru.subject = self.mutate_character(ru.subject, likes_sub)
+                else:
+                    # choose action that has sum(newaction.affectors) > sum(oldaction.affectors)
+                    ru.action = self.mutate_action(ru.action, likes_sub, likes_obj)
+            elif likes_obj:
+                if self.personality["morality"] < 5:
+                    # change the character that is negatively affected with one they dont like.
+                    for o in ru.objects:
+                        o = self.mutate_character(o, o.likes())
+                else:
+                    # choose action that has sum(newaction.affectors) > sum(oldaction.affectors)
+                    ru.action = self.mutate_action(ru.action, likes_sub, likes_obj)
+
+        rand = random.randint(0, 9)
+        twist = (9-self.personality["morality"])
+        if rand < twist:            # if ill-moraled:
+            ru.action = self.mutate_action(ru.action, likes_sub, likes_obj)
+            """if likes_obj and likes_sub:
+                # if the character likes all characters involved in the rumor, they will want them to look good
+                # choose an action where avg(affectors) > 1 and morality >= 5
+                ru.action = self.mutate_action(ru.action, likes_sub, likes_obj)
+            elif likes_obj and not likes_sub:
+                # if the character hates the subject and likes the objects,
+                # twist action s.t. sum(subject_affectors) < sum(avg(object_affectors))
+                ru.action = self.mutate_action(ru.action, likes_sub, likes_obj)
+            elif not likes_obj and likes_sub:
+                # if the character likes the subject and hates the objects,
+                # twist action s.t. sum(subject_affectors) > sum(avg(object_affectors))
+                ru.action = self.mutate_action(ru.action, likes_sub, likes_obj)
+            else:
+                # if the character hates all characters involved in the rumor, they will want them to all look bad.
+                # choose action where avg(affectors) > 1 and morality < 5
+                ru.action = self.mutate_action(ru.action, likes_sub, likes_obj)
+            """
+
+
+        # if the character doesn't like or respect the object or subject of the rumor, and are ill moraled,
+        # then they are more likely to twist the rumor. But if they like the objects,
+        # and are loyal, they will not intentionally twist the rumor
+
+
         # TODO: possibly make up a rumor if there is nothing to gossip about
 
         if len(self.rumors) > 0:
@@ -200,6 +403,8 @@ class Actor():
         self.current_area.occupants.append(self)
 
         rumor = self.select_rumor(listener)
+        if rumor == None:
+            return
         rumor = rumor.clone(rumor)
         rumor.speaker = self
         listener.hear_rumor(rumor)
@@ -227,7 +432,7 @@ class Actor():
                 if character.shortname in names:
                     rumors.append(rumor)
             if len(rumors) > 0:
-                return random.choice(rumors)
+                return select_rumor(listener, character)
         else:
             self.get_relationship(character.shortname)
         return None
@@ -248,11 +453,16 @@ class Actor():
         else:
             return "them"
 
+    def introduce(self):
+        if self.description == "":
+            self.description = f'Hi, I\'m {self.shortname}, {self.get_pronoun1()}/{self.get_pronoun2()}'
+        print(f'{self.shortname}: {self.description}')
+
     def info(self, options=[]):
         if len(options) == 0:
             options = ["p", "ru", "re"]
         print("+---------ACTOR---------+")
-        print(f'Name: {self.name} ({self.pronoun})')
+        print(f'Name: {self.name} ({self.get_pronoun1()}/{self.get_pronoun2()})')
         print(f'Current Location: {self.current_area.name}')
         if "p" in options:
             print(f'\nPERSONALITY:')
