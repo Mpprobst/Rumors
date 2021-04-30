@@ -319,27 +319,27 @@ class Actor():
                     rumors.remove(rumor)
 
         # based on listener, select a rumor
-        listener_rel = self.get_relationship(listener.shortname)
-        if listener_rel == None:
-            return None
-        """
-        t_thresh = listener_rel.trust           # threshold for action trust
-        a_thresh = listener_rel.admiration      # threshold for action admiration
-        l_thresh = listener_rel.love            # threshold for action love
-        # 2 or more thresholds must be exceeded to tell the rumor
-        for rumor in rumors:
-            rumor.info()
-            thresh_ct = 0
-            if rumor.action.r_trust >= t_thresh:
-                thresh_ct += 1
-            if rumor.action.r_admire >= a_thresh:
-                thresh_ct += 1
-            if rumor.action.r_love >= l_thresh:
-                thresh_ct += 1
+        if listener != None:
+            listener_rel = self.get_relationship(listener.shortname)
+            if listener_rel == None:
+                return None
 
-            if thresh_ct < 1:
-                rumors.remove(rumor)
-        """
+            t_thresh = listener_rel.trust           # threshold for action trust
+            a_thresh = listener_rel.admiration      # threshold for action admiration
+            l_thresh = listener_rel.love            # threshold for action love
+            # 2 or more thresholds must be exceeded to tell the rumor
+            for rumor in rumors:
+                thresh_ct = 0
+                if rumor.action.r_trust >= t_thresh:
+                    thresh_ct += 1
+                if rumor.action.r_admire >= a_thresh:
+                    thresh_ct += 1
+                if rumor.action.r_love >= l_thresh:
+                    thresh_ct += 1
+
+                if thresh_ct < 1:
+                    rumors.remove(rumor)
+
         ru = None
         if len(rumors) > 0:
             ru = random.choice(rumors)
@@ -444,6 +444,7 @@ class Actor():
 
     def ask(self, character, isRumor):
         if isRumor:
+            """
             # get a rumor
             rumors = []
             # filter the rumors
@@ -455,8 +456,9 @@ class Actor():
                 if character.shortname in names:
                     rumors.append(rumor)
             if len(rumors) > 0:
-                return random.choice(rumors)
-                #return self.select_rumor(self, character)
+            """
+                #return random.choice(rumors)
+            return self.select_rumor(None, character)
         else:
             return self.get_relationship(character.shortname)
         return None

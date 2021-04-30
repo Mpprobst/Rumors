@@ -84,7 +84,6 @@ class World():
                         char2 = char2.replace('?', '')
 
                     character2 = self.find_actor(char2)
-
                     if isQ:
                         if  "who" in question:
                             char_array = []
@@ -95,6 +94,12 @@ class World():
                         elif "tell" in question or "know" in question or "what" in question:
                             if char2 == "yourself" or char2 == "you":
                                 character1.introduce()
+                            elif char2 == "something" or char2 == "rumor" or char2 == "on" or char2 == "around":
+                                rumor = character1.ask(None, True)
+                                if rumor != None:
+                                    rumor.info()
+                                else:
+                                    print(f'{character1.shortname}: Sorry. I don\'t know anything.')
                             else:
                                 rumor = character1.ask(character2, True)
                                 if rumor != None:
