@@ -37,7 +37,7 @@ class World():
         self.init_relationships()
         self.init_rumors()
 
-        self.info()
+        #self.info()
         self.player_actor.move(self.find_area("Saloon"))
 
         self.simulate()
@@ -92,7 +92,7 @@ class World():
                                 char_array.append(rel.character.shortname)
                             char_array[len(char_array)-1] = f'and {char_array[len(char_array)-1]}'
                             print(f'{character1.shortname}: Well, there\'s {", ".join(char_array)}')
-                        elif "tell" in question or "know" in question:
+                        elif "tell" in question or "know" in question or "what" in question:
                             if char2 == "yourself" or char2 == "you":
                                 character1.introduce()
                             else:

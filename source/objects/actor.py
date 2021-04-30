@@ -94,7 +94,7 @@ class Actor():
 
         action = self.world.find_action(rumor.action.name)
         # based on personality, choose how much to believe the rumor
-        belief = 5
+        belief = 0
         subj_rel = self.get_relationship(rumor.subject.shortname)
         obj_rels = []
         for obj in rumor.objects:
@@ -109,37 +109,57 @@ class Actor():
             s = f'1. Relationship of {self.shortname} and {speaker_rel.character.shortname}\n  {speaker_rel.trust} {speaker_rel.admiration} {speaker_rel.love}'
 
         if not force_believe:
+            trust_val = 0
+            admire_val = 0
+            love_val = 0
             if rumor.action.morality > 5:
-                belief += self.personality["gullible"] - (9 - subj_rel.trust)
-                belief += subj_rel.admiration - (9 - self.personality["loyalty"])
-                belief += subj_rel.love - 4
+                trust_val = self.personality["gullible"] - (7 - int(subj_rel.trust/10))
+                #print(f'gullible: {self.personality["gullible"]} - trust: 9 - {int(subj_rel.trust/10)}' )
+                admire_val = int(subj_rel.admiration/10) - (7 - self.personality["loyalty"])
+                love_val = int(subj_rel.love/10) - 4
+                belief += 1 if trust_val >= rumor.action.r_trust else 0
+                belief += 1 if admire_val >= rumor.action.r_admire else 0
+                belief += 1 if love_val >= rumor.action.r_love else 0
             else:
-                belief += self.personality["gullible"] - (9 - subj_rel.trust)         # gullible characters believe things
-                belief += 9 - subj_rel.admiration - (9 - self.personality["loyalty"]) # if low resepect and disloyal
-                belief += (9 - subj_rel.love) - 3                                     # if character hates other, believe it
+                trust_val = self.personality["gullible"] - (7 - int(subj_rel.trust)/10)
+                admire_val = 9 - int(subj_rel.admiration/10) - (7 - self.personality["loyalty"])
+                love_val = (9 - int(subj_rel.love/10)) - 3
+                belief += 1 if trust_val >= rumor.action.r_trust else 0  # gullible characters believe things
+                belief += 1 if admire_val >= rumor.action.r_admire else 0 # if low resepect and disloyal
+                belief += 1 if love_val >= rumor.action.r_love else 0 # if character hates other, believe it
 
-            print(f'{rumor.speaker.shortname} is telling {self.shortname} that {rumor.subject.shortname} {rumor.action.name} {rumor.objects[0].shortname}')
+
+            belief += random.randint(0, 1)
+            #print(f'ACTION: {action.name} is {"good" if rumor.action.morality > 5 else "bad"}\n'+
+            #      f'\ttrust: {trust_val} >= {action.r_trust}\n'+
+            #      f'\tadmire: {admire_val} >= {action.r_admire}\n'+
+            #      f'\tlove: {love_val} >= {action.r_love}\n'+
+            #      f'Belief: {belief}'
+            #)
+            #print(f'{rumor.speaker.shortname} is telling {self.shortname} that {rumor.subject.shortname} {rumor.action.name} {rumor.objects[0].shortname}')#q belief: {belief}')
             if speaker_rel != None:
-                if belief > 10:
+                if belief > 2:
                     belief = 2
-                    speaker_rel.Trust(1)
+                    speaker_rel.Trust(5)
+                    speaker_rel.Love(3)
                     self.rumors[r_idx] = rumor
-                    print(f'{self.shortname} really believes it!')
-                elif belief > 5:
+                    #print(f'{self.shortname} really believes it!\n')
+                elif belief > 1:
                     belief = 1
+                    speaker_rel.Trust(2)
                     self.rumors[r_idx] = rumor
-                    print(f'{self.shortname} believes it.')
+                    #print(f'{self.shortname} believes it.\n')
                 elif belief > 0:
                     belief = 0
-                    speaker_rel.Trust(-1)
-                    print(f'{self.shortname} doesn\'t believe it!')
+                    speaker_rel.Trust(-3)
+                    #print(f'{self.shortname} doesn\'t believe it!\n')
                 else:
                     belief = 0
-                    speaker_rel.Trust(-2)
-                    speaker_rel.Admiration(-1)
-                    print(f'{self.shortname} doesn\'t believe it at all!')
-                print(s)
-                print(f'-->\n  {speaker_rel.trust} {speaker_rel.admiration} {speaker_rel.love}')
+                    speaker_rel.Trust(-7)
+                    speaker_rel.Admiration(-4)
+                    #print(f'{self.shortname} doesn\'t believe it at all!\n')
+                #print(s)
+                #print(f'-->\n  {speaker_rel.trust} {speaker_rel.admiration} {speaker_rel.love}')
         else:
             belief = 1
         # relationship between the listener and the subject and objects need to change based on
@@ -153,7 +173,7 @@ class Actor():
         # love, but if the subject and object are in love and the listener loves one of them
         # then they can be jealous and begin to like them less.
 
-        print(f'2. Relationship of {self.shortname} and {subj_rel.character.shortname}\n  {subj_rel.trust} {subj_rel.admiration} {subj_rel.love}')
+        #print(f'2. Relationship of {self.shortname} and {subj_rel.character.shortname}\n  {subj_rel.trust} {subj_rel.admiration} {subj_rel.love}')
 
         # listener should update their opinions on the characters invloved in the rumor
         # based on how they align with thier values
@@ -180,7 +200,7 @@ class Actor():
             rel.Admiration(int(action.object_admire * belief / 2))
             rel.Love(int(action.object_love * belief / 2))
 
-        print(f'-->\n  {subj_rel.trust} {subj_rel.admiration} {subj_rel.love}\n')
+        #print(f'-->\n  {subj_rel.trust} {subj_rel.admiration} {subj_rel.love}\n')
 
     def take_action(self):
         # choose wait, move, or gossip
@@ -302,11 +322,13 @@ class Actor():
         listener_rel = self.get_relationship(listener.shortname)
         if listener_rel == None:
             return None
+        """
         t_thresh = listener_rel.trust           # threshold for action trust
         a_thresh = listener_rel.admiration      # threshold for action admiration
         l_thresh = listener_rel.love            # threshold for action love
         # 2 or more thresholds must be exceeded to tell the rumor
         for rumor in rumors:
+            rumor.info()
             thresh_ct = 0
             if rumor.action.r_trust >= t_thresh:
                 thresh_ct += 1
@@ -317,7 +339,7 @@ class Actor():
 
             if thresh_ct < 1:
                 rumors.remove(rumor)
-
+        """
         ru = None
         if len(rumors) > 0:
             ru = random.choice(rumors)
@@ -429,12 +451,14 @@ class Actor():
                 names = []
                 for object in rumor.objects:
                     names.append(object.shortname)
+                names.append(rumor.subject.shortname)
                 if character.shortname in names:
                     rumors.append(rumor)
             if len(rumors) > 0:
-                return select_rumor(listener, character)
+                return random.choice(rumors)
+                #return self.select_rumor(self, character)
         else:
-            self.get_relationship(character.shortname)
+            return self.get_relationship(character.shortname)
         return None
 
     def get_pronoun1(self):
@@ -488,5 +512,7 @@ class Actor():
             for i in range(len(self.rumors)):
                 rumor = self.rumors[i]
                 if rumor != None:
+                    print(f'{i+1}:')
                     rumor.info()
+
         print("+-----------------------+\n")
