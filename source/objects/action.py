@@ -27,26 +27,40 @@ class Action():
         self.object_admire = 1
         self.object_love = 1
 
+        self.aliases = []
+
         if file != None:
             f = open(file, "r")
             i = 0
             for line in f:
+                val = line
                 line = line.split()
                 if i == 0:
                     self.name = " ".join(line[:])
                 elif i == 1:
-
+                    alias = ""
+                    idx = 0
+                    while idx < len(val):
+                        if val[idx] == ',':
+                            self.aliases.append(alias)
+                            alias = ""
+                            idx += 1
+                        else:
+                            alias += val[idx]
+                        idx += 1
+                    self.aliases.append(alias)
+                elif i == 2:
                     self.r_trust = int(line[0])
                     self.r_admire = int(line[1])
                     self.r_love = int(line[2])
-                elif i == 2:
+                elif i == 3:
                     self.morality = int(line[0])
                     self.taboo = int(line[1])
-                elif i == 3:
+                elif i == 4:
                     self.subject_trust = int(line[0])
                     self.subject_admire = int(line[1])
                     self.subject_love = int(line[2])
-                elif i == 4:
+                elif i == 5:
                     self.object_trust = int(line[0])
                     self.object_admire = int(line[1])
                     self.object_love = int(line[2])

@@ -24,7 +24,7 @@ class World():
         self.areas = []
         self.actors = []
         self.actions = []
-        self.initial_rumors = []
+        self.rumors = []
         self.default_actor = None
         self.default_area = None
         self.time = 0
@@ -49,7 +49,7 @@ class World():
             in_val = input("What do you do? ")
             args = in_val.split()
             if len(args) > 0:
-                if args[0] == "quit":
+                if args[0] == "quit" or args[0] == "q":
                     done = True
                     print("Thanks for playing!")
                     break
@@ -117,7 +117,8 @@ class World():
                     else:
                         # parse the rumor
                         player_rumor = Rumor.parse(self.player_actor, args, self)
-                        character1.hear_rumor(player_rumor, True)
+                        character1.hear_rumor(player_rumor.clone(player_rumor), True)
+                        self.rumors.append(player_rumor)
                         # based on their reaction, produce some response
 
                 elif args[0] == "look":
@@ -139,6 +140,12 @@ class World():
                     elif args[1] == "areas":
                         for area in self.areas:
                             area.info(args[2:])
+                    elif args[1] == "rumors":
+                        i = 1
+                        for ru in self.rumors:
+                            print(f'RUMOR {i}')
+                            ru.info(1)
+                            i+=1
                     else:
                         obj = self.find_actor(args[1])
                         if obj == self.default_actor:
@@ -234,11 +241,11 @@ class World():
         for file in files:
             if not file.endswith(".txt"):
                 continue
-            rumor = Rumor(len(self.initial_rumors), file=f'{RUMORS_DIR}/{file}', world=self)
-            #rumor.speaker.hear_rumor(rumor)
-            #rumor.listener.hear_rumor(rumor)
-            self.initial_rumors.append(rumor)
-
+            rumor = Rumor(len(self.rumors), file=f'{RUMORS_DIR}/{file}', world=self)
+            rumor.speaker.hear_rumor(rumor.clone(rumor))
+            rumor.listener.hear_rumor(rumor.clone(rumor))
+            self.rumors.append(rumor)
+            rumor.new_version(rumor.clone(rumor))
         return 0
 
     def find_area(self, areaname):
@@ -257,7 +264,7 @@ class World():
 
     def find_action(self, actionname):
         for action in self.actions:
-            if action.name == actionname:
+            if action.name == actionname or actionname in action.aliases:
                 return action
         print(f'ERROR: {actionname} not found')
 
@@ -272,5 +279,5 @@ class World():
             action.info()
 
         print("initial rumors")
-        for rumor in self.initial_rumors:
+        for rumor in self.rumors:
             rumor.info()

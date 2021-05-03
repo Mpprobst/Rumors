@@ -9,7 +9,7 @@ from objects.actor import Actor
 import random
 
 class Rumor():
-    def __init__(self, id, file=None, world=None, speaker=None, listener=None, subject=None, objects=[], action=None, location=None):
+    def __init__(self, id, file=None, world=None, speaker=None, listener=None, subject=None, objects=[], action=None, location=None, versions=[]):
         self.id = id                    # identifier for the rumor
         self.speaker = speaker          # who told this instance of the rumor
         self.listener = listener        # who heard this instance of the rumor
@@ -18,8 +18,10 @@ class Rumor():
         self.action = action            # what the subject is doing to the object
         #self.preposition = preposition    # something like with, or, on, or nothing
         self.location = location        # where the action took place
+        self.versions = versions
 
         if file != None:
+            self.objects = []
             f = open(file, "r")
             for line in f:
                 line_array = line.split()
@@ -47,11 +49,20 @@ class Rumor():
                     self.action = world.find_action(value)
                 elif item == "location":
                     self.location = world.find_area(value)
-            self.listener.hear_rumor(self)
-            self.speaker.hear_rumor(self)
+            #self.listener.hear_rumor(self)
+            #self.speaker.hear_rumor(self)
+        #self.versions.append(self)
+
+    def update(self, rumor):
+        self.speaker = rumor.speaker
+        self.listener = rumor.listener
+        self.subject = rumor.subject
+        self.objects = rumor.objects
+        self.action = rumor.action
+        self.location = rumor.location
 
     def clone(self, r):
-        return Rumor(id=r.id, speaker=r.speaker, listener=r.listener, subject=r.subject, objects=r.objects.copy(), action=r.action, location=r.location)
+        return Rumor(id=r.id, speaker=r.speaker, listener=r.listener, subject=r.subject, objects=r.objects.copy(), action=r.action, location=r.location, versions = r.versions)
 
     # given player input string, construct a rumor and spread it
     def parse(s, args, world):
@@ -77,6 +88,14 @@ class Rumor():
         for a in world.actions:
             aname = a.name
             action_idx = rumor.find(aname)
+            #print(f'looking for {aname}')
+            if action_idx < 0:
+                for alias in a.aliases:
+                    #print(f'alias: {alias}')
+                    if rumor.find(alias) > 0:
+                        action = a
+                        action_idx = 1
+                        break
             if action_idx > -1:
                 action = a
                 break
@@ -96,7 +115,33 @@ class Rumor():
                 location = area
                 break
 
-        return Rumor(id=len(world.initial_rumors)+1, speaker=speaker, listener=listener, subject=subject, objects=objects, action=action, location=location)
+        return Rumor(id=len(world.rumors)+1, speaker=speaker, listener=listener, subject=subject, objects=objects, action=action, location=location)
+
+    def new_version(self, rumor):
+        #print(f'num Version: {len(self.versions)}')
+        if (len(self.versions) == 0):
+            self.versions.append(rumor)
+            return
+
+        last = self.versions[len(self.versions)-1]
+        same = 0
+
+        if rumor.speaker.shortname == last.speaker.shortname:
+            same += 1
+        if rumor.listener.shortname == last.listener.shortname:
+            same += 1
+        if rumor.subject.shortname == last.subject.shortname:
+            same += 1
+        if len(rumor.objects) == len(last.objects):
+            for i in range(len(rumor.objects)):
+                if rumor.objects[i].shortname != last.objects[i].shortname:
+                    break
+            same += 1
+        if rumor.action.name == last.action.name:
+            same += 1
+
+        if same < 5:
+            self.versions.append(rumor)
 
     def random_intro(self):
         rand = random.randint(0, 2)
@@ -126,13 +171,16 @@ class Rumor():
         #print(self.subject.name)
         #if self.location != None:
         #    print(self.location.name)
-        objects = []
-        for obj in self.objects:
-            objects.append(obj.shortname)
+        for i in range(len(self.versions)):
+            rumor = self.versions[i]
+            objects = []
+            for obj in rumor.objects:
+                objects.append(obj.shortname)
 
-        if len(objects) > 1:
-            objects[len(objects)-1] = "and " + objects[len(objects)-1]
-        rumor_str = f'{self.speaker.name}: {self.random_intro()} {self.speaker.shortname} told {self.listener.shortname} that {self.subject.shortname} {self.action.name} {", ".join(objects[0:])}'
-        rumor_str += f' in {self.location.name}.' if self.location != None else "."
-        print(rumor_str)
+            if len(objects) > 1:
+                objects[len(objects)-1] = "and " + objects[len(objects)-1]
+            rumor_str = f'\tv{i}: ' + f'{rumor.speaker.name}: {rumor.random_intro()} ' if options == None else " "
+            rumor_str += f'{rumor.speaker.shortname} told {rumor.listener.shortname} that {rumor.subject.shortname} {rumor.action.name} {", ".join(objects[0:])}'
+            rumor_str += f' in {rumor.location.name}.' if rumor.location != None else "."
+            print(rumor_str)
         #print(f'+-----------------------+')

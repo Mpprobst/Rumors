@@ -71,18 +71,17 @@ class Actor():
                 return r
 
     def hear_rumor(self, rumor, force_believe=False):
+        og_rumor = rumor
         hadHeard = False
         r_idx = 0
         for r in self.rumors:
             if rumor.id == r.id:
                 # I've heard this before
+                og_rumor = r
                 rumor = r.clone(r)
                 hadHeard = True
                 break
             r_idx +=1
-
-        if not hadHeard:
-            self.rumors.append(rumor)
 
         # TODO: now adjust relationships
         # find the action object in the rumor
@@ -142,12 +141,20 @@ class Actor():
                     belief = 2
                     speaker_rel.Trust(5)
                     speaker_rel.Love(3)
-                    self.rumors[r_idx] = rumor
+                    if not hadHeard:
+                        self.rumors.append(rumor)
+                    else:
+                        og_rumor.update(rumor)
+                    og_rumor.new_version(rumor)
                     #print(f'{self.shortname} really believes it!\n')
                 elif belief > 1:
                     belief = 1
                     speaker_rel.Trust(2)
-                    self.rumors[r_idx] = rumor
+                    if not hadHeard:
+                        self.rumors.append(rumor)
+                    else:
+                        og_rumor.update(rumor)
+                    rumor.new_version(rumor.clone(rumor))
                     #print(f'{self.shortname} believes it.\n')
                 elif belief > 0:
                     belief = 0
@@ -161,7 +168,12 @@ class Actor():
                 #print(s)
                 #print(f'-->\n  {speaker_rel.trust} {speaker_rel.admiration} {speaker_rel.love}')
         else:
-            belief = 1
+            speaker_rel.Trust(2)
+            if not hadHeard:
+                self.rumors.append(rumor)
+            else:
+                og_rumor.update(rumor)
+            rumor.new_version(rumor.clone(rumor))
         # relationship between the listener and the subject and objects need to change based on
         # their respective current relationships and the affectors of the action
         # ex: if someone the listener doesn't like does something intimate with someone
@@ -183,9 +195,13 @@ class Actor():
         if rumor.action.morality < 5 and self.personality["morality"] >= 5:
             morals_align = False
 
+        response = f'{self.shortname}: '
         moral = self.personality["morality"] - action.morality
         if not morals_align:
+            response += f'I can\'t believe they would do that!' if random.random() < 0.5 else f'Well that\'s just terrible... shame on them.'
             belief *= -1
+        else:
+            response += f'I\'m glad they did that!' if action.morality > 0.5 else f'They deserve that!'
         #elif abs(moral) >= 5: # someone with perfect morals (9) and a neutral action (5) shouln't think too differently
         #    belief *= -1
 
@@ -200,6 +216,8 @@ class Actor():
             rel.Admiration(int(action.object_admire * belief / 2))
             rel.Love(int(action.object_love * belief / 2))
 
+        if force_believe:
+            print(response)
         #print(f'-->\n  {subj_rel.trust} {subj_rel.admiration} {subj_rel.love}\n')
 
     def take_action(self):
@@ -277,7 +295,6 @@ class Actor():
             rel = random.choice(rels)
             return rel.character
         return og_char
-
 
     def mutate_action(self, og_action, like_sub, like_obj):
         sub_thresh = og_action.sum_sub()
@@ -386,7 +403,8 @@ class Actor():
         twist = (9-self.personality["morality"])
         if rand < twist:            # if ill-moraled:
             ru.action = self.mutate_action(ru.action, likes_sub, likes_obj)
-            """if likes_obj and likes_sub:
+            """
+            if likes_obj and likes_sub:
                 # if the character likes all characters involved in the rumor, they will want them to look good
                 # choose an action where avg(affectors) > 1 and morality >= 5
                 ru.action = self.mutate_action(ru.action, likes_sub, likes_obj)
@@ -404,11 +422,9 @@ class Actor():
                 ru.action = self.mutate_action(ru.action, likes_sub, likes_obj)
             """
 
-
         # if the character doesn't like or respect the object or subject of the rumor, and are ill moraled,
         # then they are more likely to twist the rumor. But if they like the objects,
         # and are loyal, they will not intentionally twist the rumor
-
 
         # TODO: possibly make up a rumor if there is nothing to gossip about
 
@@ -514,7 +530,7 @@ class Actor():
             for i in range(len(self.rumors)):
                 rumor = self.rumors[i]
                 if rumor != None:
-                    print(f'{i+1}:')
-                    rumor.info()
+                    print(f'RUMOR: {i+1}')
+                    rumor.info(1)
 
         print("+-----------------------+\n")
