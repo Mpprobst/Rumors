@@ -5,7 +5,7 @@ Purpose: Implements the data structure of a rumor
 
 #from world import World
 from objects.actor import Area
-from objects.actor import Actor
+#from objects.actor import Actor
 import random
 
 class Rumor():
@@ -18,7 +18,7 @@ class Rumor():
         self.action = action            # what the subject is doing to the object
         #self.preposition = preposition    # something like with, or, on, or nothing
         self.location = location        # where the action took place
-        self.versions = versions
+        self.versions = []
 
         if file != None:
             self.objects = []
@@ -51,7 +51,10 @@ class Rumor():
                     self.location = world.find_area(value)
             #self.listener.hear_rumor(self)
             #self.speaker.hear_rumor(self)
-        #self.versions.append(self)
+            #self.versions.append(self.__copy__())
+        #self.versions.append(self.copy())
+        #print(f'construct {id}')
+        return None
 
     def update(self, rumor):
         self.speaker = rumor.speaker
@@ -61,8 +64,9 @@ class Rumor():
         self.action = rumor.action
         self.location = rumor.location
 
-    def clone(self, r):
-        return Rumor(id=r.id, speaker=r.speaker, listener=r.listener, subject=r.subject, objects=r.objects.copy(), action=r.action, location=r.location, versions = r.versions)
+    def copy(self):
+        #print(f'copying {self.id}')
+        return Rumor(id=self.id, speaker=self.speaker, listener=self.listener, subject=self.subject, objects=self.objects.copy(), action=self.action, location=self.location, versions=[])
 
     # given player input string, construct a rumor and spread it
     def parse(s, args, world):
@@ -117,7 +121,7 @@ class Rumor():
 
         return Rumor(id=len(world.rumors)+1, speaker=speaker, listener=listener, subject=subject, objects=objects, action=action, location=location)
 
-    def new_version(self, rumor):
+    def new_version(self, rumor, world):
         #print(f'num Version: {len(self.versions)}')
         if (len(self.versions) == 0):
             self.versions.append(rumor)
@@ -143,6 +147,12 @@ class Rumor():
         if same < 5:
             self.versions.append(rumor)
 
+        for r in world.rumors:
+            if r.id == rumor.id:
+                #print(f'adding version to {self.id}')
+                r.versions.append(rumor)
+                #r.info(1)
+
     def random_intro(self):
         rand = random.randint(0, 2)
         tell_speaker = True if random.random() < 0.5 else False
@@ -163,6 +173,18 @@ class Rumor():
                 str += f'{self.speaker.name} was saying'
         return str
 
+    def prnt_rumor(self, rumor):
+        objects = []
+        for obj in rumor.objects:
+            objects.append(obj.shortname)
+
+        if len(objects) > 1:
+            objects[len(objects)-1] = "and " + objects[len(objects)-1]
+        #print(f'id: {self.id}')
+        rumor_str = f'{rumor.random_intro()} {rumor.subject.shortname} {rumor.action.name} {", ".join(objects[0:])}'
+        rumor_str += f' in the {rumor.location.name}.' if rumor.location != None else "."
+        return rumor_str
+
     def info(self, options=None):
         #print(f'+---------RUMOR---------+')
         #print(self.speaker.name)
@@ -171,16 +193,16 @@ class Rumor():
         #print(self.subject.name)
         #if self.location != None:
         #    print(self.location.name)
-        for i in range(len(self.versions)):
-            rumor = self.versions[i]
-            objects = []
-            for obj in rumor.objects:
-                objects.append(obj.shortname)
-
-            if len(objects) > 1:
-                objects[len(objects)-1] = "and " + objects[len(objects)-1]
-            rumor_str = f'\tv{i}: ' + f'{rumor.speaker.name}: {rumor.random_intro()} ' if options == None else " "
-            rumor_str += f'{rumor.speaker.shortname} told {rumor.listener.shortname} that {rumor.subject.shortname} {rumor.action.name} {", ".join(objects[0:])}'
-            rumor_str += f' in {rumor.location.name}.' if rumor.location != None else "."
+        #print(f'versions of {self.id}: {len(self.versions)}')
+        if len(self.versions) == 0 or options == None:
+            #rumor_str = f'{self.speaker.name}: {self.random_intro()} ' if options == None else ""
+            rumor_str = self.prnt_rumor(self)
             print(rumor_str)
+        else:
+            for i in range(len(self.versions)):
+                rumor = self.versions[i]
+                rumor_str = f'\tv{i}: '
+                #rumor_str += f'{rumor.speaker.name}: {rumor.random_intro()} ' if options == None else ""
+                rumor_str += self.prnt_rumor(rumor)
+                print(rumor_str)
         #print(f'+-----------------------+')

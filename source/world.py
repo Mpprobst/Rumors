@@ -97,13 +97,17 @@ class World():
                             elif char2 == "something" or char2 == "rumor" or char2 == "on" or char2 == "around":
                                 rumor = character1.ask(None, True)
                                 if rumor != None:
-                                    rumor.info()
+                                    str = f'{character1.shortname}: ' + rumor.prnt_rumor(rumor)
+                                    print(str)
+                                    #rumor.info()
                                 else:
                                     print(f'{character1.shortname}: Sorry. I don\'t know anything.')
                             else:
                                 rumor = character1.ask(character2, True)
                                 if rumor != None:
-                                    rumor.info()
+                                    str = f'{character1.shortname}: ' + rumor.prnt_rumor(rumor)
+                                    print(str)
+                                    #rumor.info()
                                 else:
                                     print(f'{character1.shortname}: Sorry. I don\'t know anything about {char2}')
 
@@ -117,7 +121,7 @@ class World():
                     else:
                         # parse the rumor
                         player_rumor = Rumor.parse(self.player_actor, args, self)
-                        character1.hear_rumor(player_rumor.clone(player_rumor), True)
+                        character1.hear_rumor(player_rumor, force_believe=True)
                         self.rumors.append(player_rumor)
                         # based on their reaction, produce some response
 
@@ -241,11 +245,15 @@ class World():
         for file in files:
             if not file.endswith(".txt"):
                 continue
+            #print(f'rumor: {len(self.rumors)}')
             rumor = Rumor(len(self.rumors), file=f'{RUMORS_DIR}/{file}', world=self)
-            rumor.speaker.hear_rumor(rumor.clone(rumor))
-            rumor.listener.hear_rumor(rumor.clone(rumor))
+            #rumor.info(1)
             self.rumors.append(rumor)
-            rumor.new_version(rumor.clone(rumor))
+            clone = rumor.copy()
+            #clone.info(1)
+            rumor.speaker.hear_rumor(clone, True)
+            rumor.listener.hear_rumor(clone, True)
+            #rumor.new_version(clone, self)
         return 0
 
     def find_area(self, areaname):
