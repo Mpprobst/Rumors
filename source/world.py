@@ -4,6 +4,7 @@ Purpose: creates and contains characters, relationships, areas, and rumors
 Is responsible for simulating time and prompting actors to take actions
 """
 
+import csv
 import string
 from os import listdir
 from os.path import isfile, join
@@ -17,6 +18,7 @@ ACTORS_DIR = "../resources/actors"
 AREAS_DIR = "../resources/areas"
 ACTIONS_DIR = "../resources/actions"
 RUMORS_DIR = "../resources/rumors"
+OUT_DIR = "../resources/results"
 SIM_TIME = 100
 
 class World():
@@ -29,6 +31,7 @@ class World():
         self.default_area = None
         self.time = 0
         self.player_actor = Actor(world=self)
+        self.writers = []
 
         self.init_areas()
         self.connect_areas()
@@ -39,8 +42,19 @@ class World():
 
         #self.info()
         self.player_actor.move(self.find_area("Saloon"))
+        for a in range(len(self.actors)):
+            wrt = csv.writer(open(f'{OUT_DIR}/{self.actors[a].shortname}.csv', 'w'), delimiter=',')
+            self.writers.append(wrt)
+            info = []
+            for r in range(len(self.actors[a].relationships)):
+                rel = self.actors[a].relationships[r].character.shortname
+                info.append(f'{rel} (T)')
+                info.append(f'{rel} (A)')
+                info.append(f'{rel} (L)')
+            wrt.writerow(info)
 
         self.simulate()
+
 
     def play(self):
         # wait for player to input, then do a time_step
@@ -178,6 +192,18 @@ class World():
         for e in eavsedroppers:
             e.eavsedrop()
         self.time += 1
+        for a in range(len(self.actors)):
+            info = []
+            for r in range(len(self.actors[a].relationships)):
+                rel = self.actors[a].relationships[r]
+                info.append(rel.trust)
+                info.append(rel.admiration)
+                info.append(rel.love)
+
+            # get the relationships of this actor and write the results
+
+            self.writers[a].writerow(info
+            )
         #print("")
         return 0
 
