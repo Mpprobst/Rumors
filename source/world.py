@@ -19,7 +19,7 @@ AREAS_DIR = "../resources/areas"
 ACTIONS_DIR = "../resources/actions"
 RUMORS_DIR = "../resources/rumors"
 OUT_DIR = "../resources/results"
-SIM_TIME = 0
+SIM_TIME = 50
 
 class World():
     def __init__(self):

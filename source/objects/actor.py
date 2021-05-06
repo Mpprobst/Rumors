@@ -221,7 +221,8 @@ class Actor():
              subj_rel.likes()
 
         response = f'{self.shortname}: '
-        response += f'Yeah I heard that from {rumor.versions[len(rumor.versions)-1].speaker.shortname}. ' if hadHeard else ""
+        if len(rumor.versions) > 0:
+            response += f'Yeah I heard that from {rumor.versions[len(rumor.versions)-1].speaker.shortname}. ' if hadHeard else ""
         dont = "doesn\'t" if rumor.objects[0].pronoun != 'T' else "don\'t"
         if not morals_align:
             response += f'I\'m not surprised {rumor.subject.shortname} would do that.' if likes_sub else f'I can\'t believe {rumor.subject.get_pronoun1()} would do that!'
