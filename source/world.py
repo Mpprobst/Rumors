@@ -19,7 +19,7 @@ AREAS_DIR = "../resources/areas"
 ACTIONS_DIR = "../resources/actions"
 RUMORS_DIR = "../resources/rumors"
 OUT_DIR = "../resources/results"
-SIM_TIME = 100
+SIM_TIME = 0
 
 class World():
     def __init__(self):
@@ -40,7 +40,9 @@ class World():
         self.init_relationships()
         self.init_rumors()
 
+        self.available_actors = self.actors.copy()
         #self.info()
+
         self.player_actor.move(self.find_area("Saloon"))
         for a in range(len(self.actors)):
             wrt = csv.writer(open(f'{OUT_DIR}/{self.actors[a].shortname}.csv', 'w'), delimiter=',')
@@ -90,6 +92,8 @@ class World():
                 elif args[0][len(args[0])-1] == ",":
                     # we are prompting a character for something
                     character1 = self.find_actor(args[0].replace(',', ''))
+                    self.occupy_actor(character1)
+
                     char2 = args[len(args)-1]
                     question = " ".join(args[1:len(args)-2])
                     isQ = False
@@ -97,8 +101,9 @@ class World():
                         isQ = True
                         char2 = char2.replace('?', '')
 
-                    character2 = self.find_actor(char2)
+                    character2 = None
                     if isQ:
+                        character2 = self.find_actor(char2)
                         if  "who" in question:
                             char_array = []
                             for rel in character1.relationships:
@@ -200,12 +205,16 @@ class World():
                 info.append(rel.admiration)
                 info.append(rel.love)
 
-            # get the relationships of this actor and write the results
-
-            self.writers[a].writerow(info
-            )
+            self.writers[a].writerow(info)
         #print("")
+        self.available_actors = self.actors.copy()
         return 0
+
+    def occupy_actor(self, actor):
+        for a in self.available_actors:
+            if a.shortname == actor.shortname:
+                self.available_actors.remove(a)
+                break
 
     # create areas
     def init_areas(self):
@@ -239,7 +248,7 @@ class World():
             new_actor = Actor(f'{ACTORS_DIR}/{file}', self)
             #new_actor.move(self.find_area(new_actor.starting_area))
             new_actor.move(self.find_area("Saloon"))
-            if new_actor.name == "Default Character":
+            if new_actor.shortname == "Character":
                 self.default_actor = new_actor
             else:
                 self.actors.append(new_actor)
@@ -286,21 +295,21 @@ class World():
         for area in self.areas:
             if area.name == areaname:
                 return area
-        #print(f'ERROR: {areaname} not found')
+        print(f'ERROR: Area: {areaname} not found')
         return self.default_area
 
     def find_actor(self, actorname):
         for actor in self.actors:
             if actor.name == actorname or actor.shortname == actorname:
                 return actor
-        print(f'ERROR: {actorname} not found')
+        print(f'ERROR: Actor: {actorname} not found')
         return self.default_actor
 
     def find_action(self, actionname):
         for action in self.actions:
             if action.name == actionname or actionname in action.aliases:
                 return action
-        print(f'ERROR: {actionname} not found')
+        print(f'ERROR: Action: {actionname} not found')
 
     def info(self):
         for area in self.areas:

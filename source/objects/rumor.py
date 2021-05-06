@@ -75,7 +75,7 @@ class Rumor():
         subject = world.actors[0]
         objects = []
         action = world.actions[0]
-        location = world.areas[0]
+        location = world.find_area("Saloon")
 
         rumorIdx = 0
         listener = world.find_actor(args[0].replace(',', ''))
@@ -98,7 +98,7 @@ class Rumor():
                     #print(f'alias: {alias}')
                     if rumor.find(alias) > 0:
                         action = a
-                        action_idx = 1
+                        action_idx = rumor.find(alias)
                         break
             if action_idx > -1:
                 action = a
@@ -106,6 +106,7 @@ class Rumor():
 
         if action_idx < 0:
             print(f'{listener.name}: I don\'t know what that means.')
+            return None
 
         for actor in world.actors:
             if rumor[0:action_idx].find(actor.shortname) > -1:
@@ -119,13 +120,17 @@ class Rumor():
                 location = area
                 break
 
-        return Rumor(id=len(world.rumors)+1, speaker=speaker, listener=listener, subject=subject, objects=objects, action=action, location=location)
+        rumor = Rumor(id=len(world.rumors)+1, speaker=speaker, listener=listener, subject=subject, objects=objects, action=action, location=location)
+        # TODO: See if rumor already exists, update it if so.
+        for ru in world.rumors:
+            if ru.exists(rumor):
+                rumor.id = ru.id
+                break
+        return rumor
 
-    def new_version(self, rumor, world):
-        #print(f'num Version: {len(self.versions)}')
+    def exists(self, rumor):
         if (len(self.versions) == 0):
-            self.versions.append(rumor)
-            return
+            return False
 
         last = self.versions[len(self.versions)-1]
         same = 0
@@ -145,6 +150,14 @@ class Rumor():
             same += 1
 
         if same < 5:
+            return False
+        return True
+
+    def new_version(self, rumor, world):
+        if rumor == None:
+            return
+        #print(f'num Version: {len(self.versions)}')
+        if not self.exists(rumor):
             self.versions.append(rumor)
 
         for r in world.rumors:

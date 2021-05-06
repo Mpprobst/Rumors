@@ -74,6 +74,8 @@ class Actor():
 
     def hear_rumor(self, rumor, speaker=None, force_believe=False):
         #print(f'{self.shortname} hearing rumor {rumor.id}')
+        if rumor == None:
+            return
         hadHeard = False
         r_idx = 0
         for r in self.rumors:
@@ -198,19 +200,37 @@ class Actor():
 
         # listener should update their opinions on the characters invloved in the rumor
         # based on how they align with thier values
+
+        # PRODUCE RESPONSE #
         morals_align = True
         if rumor.action.morality >= 5 and self.personality["morality"] < 5:
             morals_align = False
         if rumor.action.morality < 5 and self.personality["morality"] >= 5:
             morals_align = False
 
+        like_ct = 0
+        for rel in obj_rels:
+            if rel == None:
+                continue
+            if rel.likes():
+                like_ct += 1
+
+        likes_obj = like_ct >= len(rumor.objects) / 2
+        likes_sub = True
+        if subj_rel != None:
+             subj_rel.likes()
+
         response = f'{self.shortname}: '
-        moral = self.personality["morality"] - action.morality
+        response += f'Yeah I heard that from {rumor.versions[len(rumor.versions)-1].speaker.shortname}. ' if hadHeard else ""
+        dont = "doesn\'t" if rumor.objects[0].pronoun != 'T' else "don\'t"
         if not morals_align:
-            response += f'I can\'t believe they would do that!' if random.random() < 0.5 else f'Well that\'s just terrible... shame on them.'
+            response += f'I\'m not surprised {rumor.subject.shortname} would do that.' if likes_sub else f'I can\'t believe {rumor.subject.get_pronoun1()} would do that!'
+            response += f'But poor {rumor.objects[0].shortname}... {rumor.objects[0].get_pronoun1()} {dont} deserve that.' if likes_obj else f'{rumor.objects[0].shortname} got what they deserved!'
             belief *= -1
         else:
-            response += f'I\'m glad they did that!' if action.morality > 0.5 else f'They deserve that!'
+            response += f'I\'m glad {rumor.subject.get_pronoun1()} did that!' if likes_sub else f'That\'s surprising!'
+            response += f' {rumor.objects[0].shortname} deserved that!' if not likes_obj else f' Good for {rumor.objects[0].shortname}!'
+
         #elif abs(moral) >= 5: # someone with perfect morals (9) and a neutral action (5) shouln't think too differently
         #    belief *= -1
         if subj_rel != None:
@@ -235,7 +255,7 @@ class Actor():
         return None
         # choose wait, move, or gossip
         # probability array [p_wait, p_gossip, p_move, p_eavsedrop]
-        p = [2, 5, 0, 0]    # TODO: change p_move in final version when there are more characters
+        p = [5, 5, 0, 0]    # TODO: change p_move in final version when there are more characters
 
         # talkative people will want to tell a rumor
         p[1] += self.personality["talkative"] - 4
@@ -400,7 +420,16 @@ class Actor():
             self.mutate_character(ru.objects[0], like_o)
             self.mutate_character(ru.subject, like_s)
             self.mutate_action(ru.action, like_s, like_o)
-            self.world.rumors.append(ru.copy())
+
+            new_rumor = True
+            for rumor in self.world.rumors:
+                if rumor.exists(ru):
+                    new_rumor = False
+                    ru = rumor.copy()
+                    break
+            if new_rumor:
+                self.world.rumors.append(ru.copy())
+
             #ru.info(1)
             #print("THAT WAS A LIE")
 
@@ -472,10 +501,27 @@ class Actor():
     # tell another character a rumor. pick rumor from ones the agent knows
     def gossip(self):
         #print(f'{self.shortname} is gossiping')
-        listeners = self.current_area.occupants
+        listeners = self.current_area.occupants.copy()
         listeners.remove(self)
+        for l in listeners:
+            available = False
+            for a in self.world.available_actors:
+                if a.shortname == l.shortname:
+                    available = True
+            if not available or l.shortname == "You":
+                listeners.remove(l)
+        #s=""
+        #for a in listeners:
+        #    s += f'{a.shortname}, '
+        #print(f'available actors: {s}')
+        if len(listeners) == 0:
+            self.wait()
+            return 0
         listener = self.select_listener(listeners)
-        self.current_area.occupants.append(self)
+
+        self.world.occupy_actor(listener)
+        self.world.occupy_actor(self)
+        #self.current_area.occupants.append(self)
 
         rumor = self.select_rumor(listener)
         if rumor == None:
