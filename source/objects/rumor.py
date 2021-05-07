@@ -51,12 +51,12 @@ class Rumor():
                     self.location = world.find_area(value)
             #self.listener.hear_rumor(self)
             #self.speaker.hear_rumor(self)
-            #self.versions.append(self.__copy__())
-        #self.versions.append(self.copy())
+            self.versions.append(self.copy())
         #print(f'construct {id}')
         return None
 
     def update(self, rumor):
+        self.versions.append(self.copy())
         self.speaker = rumor.speaker
         self.listener = rumor.listener
         self.subject = rumor.subject
@@ -121,35 +121,44 @@ class Rumor():
                 break
 
         rumor = Rumor(id=len(world.rumors)+1, speaker=speaker, listener=listener, subject=subject, objects=objects, action=action, location=location)
+
         # TODO: See if rumor already exists, update it if so.
         for ru in world.rumors:
             if ru.exists(rumor):
                 rumor.id = ru.id
+                ru.new_version(rumor, world)
+                #ru.update(rumor)
                 break
         return rumor
 
-    def exists(self, rumor):
-        if (len(self.versions) == 0):
-            return False
+    def exists(self, rumor, exact=False):
+        req = 3 if not exact else 4
 
-        last = self.versions[len(self.versions)-1]
+        last = self
+        if (len(self.versions) > 0):
+            last = self.versions[len(self.versions)-1]
+
         same = 0
 
-        if rumor.speaker.shortname == last.speaker.shortname:
-            same += 1
-        if rumor.listener.shortname == last.listener.shortname:
-            same += 1
+        #if rumor.speaker.shortname == last.speaker.shortname:
+        #    same += 1
+        #if rumor.listener.shortname == last.listener.shortname:
+        #    same += 1
         if rumor.subject.shortname == last.subject.shortname:
             same += 1
         if len(rumor.objects) == len(last.objects):
+            match = 1
             for i in range(len(rumor.objects)):
                 if rumor.objects[i].shortname != last.objects[i].shortname:
+                    match = 0
                     break
-            same += 1
+            same += match
         if rumor.action.name == last.action.name:
             same += 1
+        if rumor.location.name == last.location.name:
+            same += 1
 
-        if same < 5:
+        if same < req:
             return False
         return True
 
@@ -157,13 +166,14 @@ class Rumor():
         if rumor == None:
             return
         #print(f'num Version: {len(self.versions)}')
-        if not self.exists(rumor):
-            self.versions.append(rumor)
+        if not self.exists(rumor, True):
+            self.update(rumor)
 
         for r in world.rumors:
             if r.id == rumor.id:
                 #print(f'adding version to {self.id}')
-                r.versions.append(rumor)
+                if not r.exists(rumor, True):
+                    r.update(rumor)
                 #r.info(1)
 
     def random_intro(self):
@@ -194,7 +204,7 @@ class Rumor():
         if len(objects) > 1:
             objects[len(objects)-1] = "and " + objects[len(objects)-1]
         #print(f'id: {self.id}')
-        rumor_str = f'{rumor.random_intro()} {rumor.subject.shortname} {rumor.action.name} {", ".join(objects[0:])}'
+        rumor_str = f'{rumor.subject.shortname} {rumor.action.name} {", ".join(objects[0:])}'
         rumor_str += f' in the {rumor.location.name}.' if rumor.location != None else "."
         return rumor_str
 
@@ -208,8 +218,8 @@ class Rumor():
         #    print(self.location.name)
         #print(f'versions of {self.id}: {len(self.versions)}')
         if len(self.versions) == 0 or options == None:
-            #rumor_str = f'{self.speaker.name}: {self.random_intro()} ' if options == None else ""
-            rumor_str = self.prnt_rumor(self)
+            rumor_str = f'{self.speaker.name}: {self.random_intro()} ' if options == None else ""
+            rumor_str += self.prnt_rumor(self)
             print(rumor_str)
         else:
             for i in range(len(self.versions)):

@@ -76,15 +76,15 @@ class Actor():
         #print(f'{self.shortname} hearing rumor {rumor.id}')
         if rumor == None:
             return
-        hadHeard = False
+        existing_rumor = None
         r_idx = 0
         for r in self.rumors:
-            if rumor.id == r.id:
+            if r.exists(rumor):
                 # I've heard this before
-                rumor = r
-                hadHeard = True
+                rumor.id = r.id
+                existing_rumor = r
                 break
-            r_idx +=1
+            r_idx += 1
 
         if speaker == None:
             speaker = self
@@ -150,20 +150,24 @@ class Actor():
                     belief = 2
                     speaker_rel.Trust(5)
                     speaker_rel.Love(3)
-                    if not hadHeard:
-                        self.rumors.append(rumor.copy())
+                    #rumor.new_version(rumor.copy(), self.world)
+                    if existing_rumor == None:
+                        clone = rumor.copy()
+                        clone.versions.append(clone.copy())
+                        self.rumors.append(clone)
                     else:
-                        rumor.update(rumor.copy())
-                    rumor.new_version(rumor.copy(), self.world)
+                        existing_rumor.new_version(rumor, self.world)
                     #print(f'{self.shortname} really believes it!\n')
                 elif belief > 1:
                     belief = 1
                     speaker_rel.Trust(2)
-                    if not hadHeard:
-                        self.rumors.append(rumor.copy())
+                    #rumor.new_version(rumor.copy(), self.world)
+                    if existing_rumor == None:
+                        clone = rumor.copy()
+                        clone.versions.append(clone.copy())
+                        self.rumors.append(clone)
                     else:
-                        rumor.update(rumor.copy())
-                    rumor.new_version(rumor.copy(), self.world)
+                        existing_rumor.new_version(rumor, self.world)
                     #print(f'{self.shortname} believes it.\n')
                 elif belief > 0:
                     belief = 0
@@ -179,12 +183,13 @@ class Actor():
         else:
             if speaker_rel != None:
                 speaker_rel.Trust(2)
-            if not hadHeard:
-                #print(f'new rumor for {self.shortname}')
-                self.rumors.append(rumor.copy())
+            #rumor.new_version(rumor.copy(), self.world)
+            if existing_rumor == None:
+                clone = rumor.copy()
+                clone.versions.append(clone.copy())
+                self.rumors.append(clone)
             else:
-                rumor.update(rumor.copy())
-            rumor.new_version(rumor.copy(), self.world)
+                existing_rumor.new_version(rumor, self.world)
         # relationship between the listener and the subject and objects need to change based on
         # their respective current relationships and the affectors of the action
         # ex: if someone the listener doesn't like does something intimate with someone
@@ -222,7 +227,7 @@ class Actor():
 
         response = f'{self.shortname}: '
         if len(rumor.versions) > 0:
-            response += f'Yeah I heard that from {rumor.versions[len(rumor.versions)-1].speaker.shortname}. ' if hadHeard else ""
+            response += f'Yeah I heard that from {rumor.versions[len(rumor.versions)-1].speaker.shortname}. ' if existing_rumor != None else ""
         dont = "doesn\'t" if rumor.objects[0].pronoun != 'T' else "don\'t"
         if not morals_align:
             response += f'I\'m not surprised {rumor.subject.shortname} would do that.' if likes_sub else f'I can\'t believe {rumor.subject.get_pronoun1()} would do that!'
@@ -421,6 +426,7 @@ class Actor():
             self.mutate_character(ru.objects[0], like_o)
             self.mutate_character(ru.subject, like_s)
             self.mutate_action(ru.action, like_s, like_o)
+            ru.versions.append(ru.copy())
 
             new_rumor = True
             for rumor in self.world.rumors:
@@ -429,8 +435,7 @@ class Actor():
                     ru = rumor.copy()
                     break
             if new_rumor:
-                self.world.rumors.append(ru.copy())
-
+                self.world.rumors.append(ru)
             #ru.info(1)
             #print("THAT WAS A LIE")
 
