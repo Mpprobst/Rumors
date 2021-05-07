@@ -1,0 +1,14 @@
+name Oswald the Outlaw
+pronoun M
+area Main Road
+description You actually want to talk to me? Well, I'm Oswald. It's probably best you don't let anyone see you talking to me.
+trustworthy 0
+talkative 1
+gullible 1
+nosy 1
+loyalty 8
+fame 9
+morality 8
+memory 5
+perception 8
+opinion 1

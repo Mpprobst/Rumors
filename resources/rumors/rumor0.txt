@@ -1,6 +1,6 @@
-speaker Blair the Barkeep
-listener Blair the Barkeep
+speaker Blair
+listener Terry
 subject Sheriff Sam
-objects Oswald the Outlaw, Terry the Teaspiller
-action drank
+objects Oswald the Outlaw, Martha
+action drank with
 location Jail

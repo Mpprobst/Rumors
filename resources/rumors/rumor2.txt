@@ -1,0 +1,6 @@
+speaker Terry
+listener Martha
+subject Oswald
+objects Blair
+action is in love with
+location Saloon

@@ -1,5 +1,6 @@
 name Terry the Teaspiller
 pronoun T
+description Hi I'm Terry! You've probably heard quite a lot on your travels. I'd love to hear all about it!
 area Saloon
 trustworthy 1
 talkative 9
@@ -10,3 +11,4 @@ fame 5
 morality 5
 memory 8
 perception 8
+opinion 3

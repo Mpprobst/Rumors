@@ -1,7 +1,8 @@
 name Blair the Barkeep
 pronoun T
+description I am the barkeep of this fine establishment. People around here love to talk, and as the person who gives them whiskey, they tend to tell me quite a lot.
 area Saloon
-trustworthy 6
+trustworthy 7
 talkative 9
 gullible 7
 nosy 6
@@ -10,3 +11,4 @@ fame 9
 morality 5
 memory 7
 perception 6
+opinion 7

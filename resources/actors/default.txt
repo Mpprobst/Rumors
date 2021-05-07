@@ -1,5 +1,6 @@
 name Default Character
 pronoun T
+description I am just a placeholder.
 area Placeholder
 trustworthy 0
 talkative 0
@@ -10,3 +11,4 @@ fame 0
 morality 0
 memory 0
 perception 0
+opinion 5
