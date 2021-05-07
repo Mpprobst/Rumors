@@ -1,6 +1,7 @@
 name Sheriff Sam
 pronoun F
 area Jail
+description I'm the sheriff 'round here. Don't nothin' get by me, especially passerbyers like you.
 trustworthy 2
 talkative 3
 gullible 3
@@ -10,3 +11,4 @@ fame 9
 morality 2
 memory 5
 perception 8
+opinion 9

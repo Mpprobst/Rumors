@@ -1,0 +1,71 @@
++---------ACTOR---------+
+Name: Blair the Barkeep (they/them)
+Current Location: Saloon
+
+RUMORS:
+RUMOR: 1
+	v0: Martha stole an heirloom from Oswald in the Saloon.
+	v1: Martha stole an heirloom from Oswald in the Saloon.
+	v2: Martha drank with Oswald in the Saloon.
+RUMOR: 2
+	v0: Martha gave a gift to Sam in the Saloon.
+	v1: Martha gave a gift to Sam in the Saloon.
+	v2: Martha gave a gift to Terry in the Saloon.
+	v3: Martha gave a gift to Terry in the Saloon.
+	v4: Martha gave some money to Terry in the Saloon.
+RUMOR: 3
+	v0: Martha gave some money to Terry in the Saloon.
+	v1: Martha gave some money to Terry in the Saloon.
+	v2: Martha drank with Terry in the Saloon.
+RUMOR: 4
+	v0: Martha is in love with Blair in the Saloon.
+	v1: Martha is in love with Blair in the Saloon.
+RUMOR: 5
+	v0: Martha gave a gift to Terry in the Jail.
+	v1: Martha gave a gift to Terry in the Jail.
+	v2: Martha gave a gift to Terry in the Main Road.
+	v3: Martha gave a gift to Terry in the General Store.
+	v4: Martha drank with Terry in the Main Road.
+RUMOR: 6
+	v0: Martha drank with Terry in the General Store.
+	v1: Martha drank with Terry in the General Store.
+RUMOR: 7
+	v0: Martha drank with Sam in the Saloon.
+	v1: Martha drank with Sam in the Saloon.
+	v2: Martha gave some money to Sam in the Saloon.
+	v3: Martha gave a gift to Sam in the Saloon.
+RUMOR: 8
+	v0: Martha gave some money to Terry in the Main Road.
+	v1: Martha gave some money to Terry in the Main Road.
+	v2: Martha gave some money to Oswald in the Main Road.
+	v3: Martha gave some money to Terry in the Jail.
+	v4: Martha gave some money to Sam in the Main Road.
+RUMOR: 9
+	v0: Martha gave some money to Oswald in the Jail.
+	v1: Martha gave some money to Oswald in the Jail.
+RUMOR: 10
+	v0: Martha gave some money to Sam in the General Store.
+RUMOR: 11
+	v0: Oswald gave some money to Martha in the Saloon.
+	v1: Oswald gave some money to Martha in the Saloon.
+	v2: Oswald gave some money to Martha in the Main Road.
+	v3: Oswald gave some money to Martha in the Jail.
+	v4: Oswald gave some money to Martha in the General Store.
+	v5: Terry gave some money to Martha in the Jail.
+	v6: Terry gave some money to Martha in the General Store.
+	v7: Sam gave some money to Martha in the Jail.
+	v8: Sam gave some money to Martha in the General Store.
+	v9: Sam drank with Martha in the Jail.
+RUMOR: 12
+	v0: Terry gave some money to Martha in the Saloon.
+	v1: Terry gave some money to Martha in the Saloon.
+	v2: Terry gave some money to Martha in the Main Road.
+	v3: Sam gave some money to Martha in the Saloon.
+	v4: Sam gave some money to Martha in the Main Road.
+	v5: Sam drank with Martha in the Saloon.
+RUMOR: 13
+	v0: Sam drank with Martha in the Saloon.
+RUMOR: 14
+	v0: Oswald is in love with Martha in the Saloon.
+	v1: Oswald is in love with Martha in the Saloon.
++-----------------------+

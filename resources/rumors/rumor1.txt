@@ -1,0 +1,6 @@
+speaker Sam
+listener Martha
+subject Sheriff Sam
+objects Terry
+action fought with
+location Main Road

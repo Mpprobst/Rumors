@@ -4,56 +4,221 @@ Purpose: creates and contains characters, relationships, areas, and rumors
 Is responsible for simulating time and prompting actors to take actions
 """
 
+import csv
 import string
+import random
 from os import listdir
 from os.path import isfile, join
 import objects
 from objects.area import Area
 from objects.actor import Actor
+from objects.action import Action
 from objects.rumor import Rumor
 
 ACTORS_DIR = "../resources/actors"
 AREAS_DIR = "../resources/areas"
+ACTIONS_DIR = "../resources/actions"
 RUMORS_DIR = "../resources/rumors"
-SIM_TIME = 2
+OUT_DIR = "../resources/results"
+SIM_TIME = 0
 
 class World():
     def __init__(self):
-        self.actors = []
         self.areas = []
-        self.initial_rumors = []
+        self.actors = []
+        self.actions = []
+        self.rumors = []
         self.default_actor = None
         self.default_area = None
         self.time = 0
+        self.player_actor = Actor(world=self)
+        self.writers = []
 
         self.init_areas()
         self.connect_areas()
         self.init_actors()
+        self.init_actions()
         self.init_relationships()
         self.init_rumors()
 
-        self.info()
+        self.available_actors = self.actors.copy()
+        #self.info()
+
+        self.player_actor.move(self.find_area("Saloon"))
+        for a in range(len(self.actors)):
+            wrt = csv.writer(open(f'{OUT_DIR}/{self.actors[a].shortname}.csv', 'w'), delimiter=',')
+            self.writers.append(wrt)
+            info = []
+            for r in range(len(self.actors[a].relationships)):
+                rel = self.actors[a].relationships[r].character.shortname
+                info.append(f'{rel} (T)')
+                info.append(f'{rel} (A)')
+                info.append(f'{rel} (L)')
+            wrt.writerow(info)
 
         self.simulate()
+
 
     def play(self):
         # wait for player to input, then do a time_step
         done = False
         while not done:
+            in_val = input("What do you do? ")
+            args = in_val.split()
+            if len(args) > 0:
+                if args[0] == "quit" or args[0] == "q":
+                    done = True
+                    print("Thanks for playing!")
+                    break
+                elif args[0] == "help":
+                    print("+--------------------------------------------------HELP--------------------------------------------------+")
+                    print(f'Here is a list of the valid commands:\n' +
+                          f' - <character1>, <question> <character2> <?>: talk to a specific character about something \n' +
+                          f'\t<question>: ask anyting! Say things like: \"do you like\", \"how do you feel about\" \"tell me about\"\n'+
+                          f'\t\tbut if the action is too complex for the character, they will not understand it\n' +
+                          f'\t <character2>: a specific character pertaining to your question.\n\t\tThis can be the same as <character1> if you enter \"yourself\".\n\t\tYou can also use yourself as the second character.\n\t\tIf the character doesn\'t exist, the character will let you know.\n' +
+                          f'\t<?>: put a question mark if you want to ask a question. \n\t\tOtherwise it is assumed you are spreading a rumor. \n' +
+                          #f' - gossip <character> <rumor>: tell a character a rumor. if <character> is empty, Blair is default\n' +
+                          f'\t<rumor>: Say anything! Only valid actions and characters will be registered.\n' +
+                          f'\tlist of valid actions:\n' +
+                          f' - look: get info on your current area\n' +
+                          f' - info <shortname> <options separated by spaces>: get info about something.\n\t\tenter the shortname of the item of interest, \"actors\", \"areas\", or \"all\" to get all info\n' +
+                          f'\t<character> p re ru: print character info. p - personality, re - relationships, ru - rumors known.\n' +
+                          f'\t<area> o c: print area info. o - occupants, c - connected areas.\n'
+                          f'\t you can enter no additional options to get all info about the designated object\n' +
+                          f' - quit: ends the experience\n' +
+                          f' - help: print the help menu\n'
+                    )
+                    print("+--------------------------------------------------------------------------------------------------------+")
+                elif args[0][len(args[0])-1] == ",":
+                    # we are prompting a character for something
+                    character1 = self.find_actor(args[0].replace(',', ''))
+                    self.occupy_actor(character1)
+
+                    char2 = args[len(args)-1]
+                    question = " ".join(args[1:len(args)-2])
+                    isQ = False
+                    if '?' in char2:
+                        isQ = True
+                        char2 = char2.replace('?', '')
+
+                    character2 = None
+                    if isQ:
+                        character2 = self.find_actor(char2)
+                        if  "who" in question:
+                            char_array = []
+                            for rel in character1.relationships:
+                                char_array.append(rel.character.shortname)
+                            char_array[len(char_array)-1] = f'and {char_array[len(char_array)-1]}'
+                            print(f'{character1.shortname}: Well, there\'s {", ".join(char_array)}')
+                        elif "tell" in question or "know" in question or "what" in question:
+                            if char2 == "yourself" or char2 == "you":
+                                character1.introduce()
+                            elif char2 == "something" or char2 == "rumor" or char2 == "on" or char2 == "around":
+                                rumor = character1.ask(None, True)
+                                if rumor != None:
+                                    str = f'{character1.shortname}: ' + rumor.prnt_rumor(rumor)
+                                    print(str)
+                                    #rumor.info()
+                                else:
+                                    print(f'{character1.shortname}: Sorry. I don\'t know anything.')
+                            else:
+                                rumor = character1.ask(character2, True)
+                                if rumor != None:
+                                    str = f'{character1.shortname}: ' + rumor.prnt_rumor(rumor)
+                                    print(str)
+                                    #rumor.info()
+                                else:
+                                    print(f'{character1.shortname}: Sorry. I don\'t know anything about {char2}')
+
+                        else:
+                            relationship = character1.ask(character2, False)
+                            if relationship != None:
+                                print(f'{character1.shortname}: {relationship.info()}')
+                            else:
+                                print(f'{character1.shortname}: Sorry. I don\'t know anything about {char2}')
+
+                    else:
+                        # parse the rumor
+                        player_rumor = Rumor.parse(self.player_actor, args, self)
+                        character1.hear_rumor(player_rumor, force_believe=True)
+                        #self.rumors.append(player_rumor)
+                        # based on their reaction, produce some response
+
+                elif args[0] == "look":
+                    area = self.find_area("Saloon")
+                    patrons = []
+                    for a in area.occupants:
+                        patrons.append(a.shortname)
+                    if len(patrons) > 1:
+                        patrons[len(patrons)-1] = "and " + patrons[len(patrons)-1]
+                    patrons = ", ".join(patrons)
+                    print(f'You are sitting at the bar in the {area.name}. \nIn the saloon is: {patrons}')
+                    continue
+                elif args[0] == "info":
+                    if args[1] == "all":
+                        self.info()
+                    elif args[1] == "actors":
+                        for actor in self.actors:
+                            actor.info(args[2:])
+                    elif args[1] == "areas":
+                        for area in self.areas:
+                            area.info(args[2:])
+                    elif args[1] == "rumors":
+                        i = 1
+                        for ru in self.rumors:
+                            print(f'RUMOR {i}')
+                            ru.info(1)
+                            i+=1
+                    else:
+                        obj = self.find_actor(args[1])
+                        if obj == self.default_actor:
+                            obj = self.find_area(args[1])
+                            if obj == self.default_area:
+                                continue
+                        obj.info(args[2:])
+                        continue
             self.time_step()
 
     # simulate time before the experience begins
     def simulate(self):
         while self.time < SIM_TIME:
             self.time_step()
+        self.play()
 
     def time_step(self):
         # process player input if needed
-        print(f'time step: {self.time}')
-        for actor in self.actors:
+        #print(f'time step: {self.time}')
+        eavsedroppers = []
+        while len(self.available_actors) > 0:
+            actor = random.choice(self.available_actors)
             actor.take_action()
+            self.occupy_actor(actor)
+            if actor.eavsedropping:
+                eavsedroppers.append(actor)
 
+        for e in eavsedroppers:
+            e.eavsedrop()
         self.time += 1
+        for a in range(len(self.actors)):
+            info = []
+            for r in range(len(self.actors[a].relationships)):
+                rel = self.actors[a].relationships[r]
+                info.append(rel.trust)
+                info.append(rel.admiration)
+                info.append(rel.love)
+
+            self.writers[a].writerow(info)
+        #print("")
+        self.available_actors = self.actors.copy()
+        return 0
+
+    def occupy_actor(self, actor):
+        for a in self.available_actors:
+            if a.shortname == actor.shortname:
+                self.available_actors.remove(a)
+                #print(f'\t{a.shortname} is occupied')
+                break
         return 0
 
     # create areas
@@ -85,17 +250,29 @@ class World():
         for file in files:
             if not file.endswith(".txt"):
                 continue
-            new_actor = Actor(f'{ACTORS_DIR}/{file}')
-            new_actor.move(self.find_area(new_actor.starting_area))
-            if new_actor.name == "Default Character":
+            new_actor = Actor(f'{ACTORS_DIR}/{file}', self)
+            #new_actor.move(self.find_area(new_actor.starting_area))
+            new_actor.move(self.find_area("Saloon"))
+            if new_actor.shortname == "Character":
                 self.default_actor = new_actor
             else:
                 self.actors.append(new_actor)
         return 0
 
+    def init_actions(self):
+        files = [file for file in listdir(ACTIONS_DIR)]
+        for file in files:
+            if not file.endswith(".txt"):
+                continue
+            else:
+                new_action = Action(f'{ACTIONS_DIR}/{file}')
+                self.actions.append(new_action)
+        return 0
+
     # all actors generated, initialize their relationships
     def init_relationships(self):
         for actor in self.actors:
+            actor.start_relationship(self.player_actor)
             others = self.actors.copy()
             others.remove(actor)
             for other in others:
@@ -108,22 +285,36 @@ class World():
         for file in files:
             if not file.endswith(".txt"):
                 continue
-            self.initial_rumors.append(Rumor(f'{RUMORS_DIR}/{file}', self))
+            #print(f'rumor: {len(self.rumors)}')
+            rumor = Rumor(len(self.rumors), file=f'{RUMORS_DIR}/{file}', world=self)
+            #rumor.info(1)
+            self.rumors.append(rumor)
+            clone = rumor.copy()
+            #clone.info(1)
+            rumor.speaker.hear_rumor(clone, True)
+            rumor.listener.hear_rumor(clone, True)
+            #rumor.new_version(clone, self)
         return 0
 
     def find_area(self, areaname):
         for area in self.areas:
             if area.name == areaname:
                 return area
-        #print(f'ERROR: {areaname} not found')
+        print(f'ERROR: Area: {areaname} not found')
         return self.default_area
 
     def find_actor(self, actorname):
         for actor in self.actors:
-            if actor.name == actorname:
+            if actor.name == actorname or actor.shortname == actorname:
                 return actor
-        #print(f'ERROR: {actorname} not found')
+        print(f'ERROR: Actor: {actorname} not found')
         return self.default_actor
+
+    def find_action(self, actionname):
+        for action in self.actions:
+            if action.name == actionname or actionname in action.aliases:
+                return action
+        print(f'ERROR: Action: {actionname} not found')
 
     def info(self):
         for area in self.areas:
@@ -132,5 +323,9 @@ class World():
         for actor in self.actors:
             actor.info()
 
-        for rumor in self.initial_rumors:
+        for action in self.actions:
+            action.info()
+
+        print("initial rumors")
+        for rumor in self.rumors:
             rumor.info()

@@ -62,16 +62,20 @@ class Area():
     def get_connections(self):
         return self.connections
 
-    def info(self):
+    def info(self, options=None):
+        if options == None:
+            options = ["o", "c"]
         print(f'+---------AREA {self.id}--------+')
         print(f'Name: {self.name}')
         print(f'Noise Factor: {self.noise}')
         print(f'Capacity: {len(self.occupants)} of {self.capacity}')
-        print(f'\nOCCUPANTS:')
-        for o in self.occupants:
-            print(f'  {o.name}')
-        print(f'\nCONNECTED AREAS:')
-        for c in self.connections:
-            print(f'  {c.name}')
+        if "o" in options:
+            print(f'\nOCCUPANTS:')
+            for o in self.occupants:
+                print(f'  {o.name}')
+        if "c" in options:
+            print(f'\nCONNECTED AREAS:')
+            for c in self.connections:
+                print(f'  {c.name}')
         print("+-----------------------+\n")
         return 0

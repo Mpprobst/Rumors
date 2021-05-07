@@ -1,11 +1,14 @@
 name Martha the Merchant
+pronoun F
+description I'm Martha, I own the general store in town. I can get you what you need, if you got the cash.
 area General Store
 trustworthy 3
 talkative 8
-gullible 2
+gullible 7
 nosy 6
 loyalty 3
 fame 7
 morality 3
 memory 4
 perception 7
+opinion 4
