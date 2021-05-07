@@ -6,6 +6,7 @@ Is responsible for simulating time and prompting actors to take actions
 
 import csv
 import string
+import random
 from os import listdir
 from os.path import isfile, join
 import objects
@@ -19,7 +20,7 @@ AREAS_DIR = "../resources/areas"
 ACTIONS_DIR = "../resources/actions"
 RUMORS_DIR = "../resources/rumors"
 OUT_DIR = "../resources/results"
-SIM_TIME = 50
+SIM_TIME = 0
 
 class World():
     def __init__(self):
@@ -141,7 +142,7 @@ class World():
                         # parse the rumor
                         player_rumor = Rumor.parse(self.player_actor, args, self)
                         character1.hear_rumor(player_rumor, force_believe=True)
-                        self.rumors.append(player_rumor)
+                        #self.rumors.append(player_rumor)
                         # based on their reaction, produce some response
 
                 elif args[0] == "look":
@@ -189,8 +190,10 @@ class World():
         # process player input if needed
         #print(f'time step: {self.time}')
         eavsedroppers = []
-        for actor in self.actors:
+        while len(self.available_actors) > 0:
+            actor = random.choice(self.available_actors)
             actor.take_action()
+            self.occupy_actor(actor)
             if actor.eavsedropping:
                 eavsedroppers.append(actor)
 
@@ -214,7 +217,9 @@ class World():
         for a in self.available_actors:
             if a.shortname == actor.shortname:
                 self.available_actors.remove(a)
+                #print(f'\t{a.shortname} is occupied')
                 break
+        return 0
 
     # create areas
     def init_areas(self):

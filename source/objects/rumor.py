@@ -121,14 +121,18 @@ class Rumor():
                 break
 
         rumor = Rumor(id=len(world.rumors)+1, speaker=speaker, listener=listener, subject=subject, objects=objects, action=action, location=location)
-
+        rumor.versions.append(rumor.copy())
         # TODO: See if rumor already exists, update it if so.
+        new_rumor = True
         for ru in world.rumors:
             if ru.exists(rumor):
                 rumor.id = ru.id
                 ru.new_version(rumor, world)
-                #ru.update(rumor)
+                new_rumor = False
                 break
+
+        if new_rumor:
+            world.rumors.append(rumor)
         return rumor
 
     def exists(self, rumor, exact=False):
@@ -162,19 +166,24 @@ class Rumor():
             return False
         return True
 
+    # return True if the rumor was unique enough for updating it, False otherwise
     def new_version(self, rumor, world):
         if rumor == None:
-            return
+            return False
         #print(f'num Version: {len(self.versions)}')
+        unique = False
         if not self.exists(rumor, True):
             self.update(rumor)
+            unique = True
 
         for r in world.rumors:
             if r.id == rumor.id:
                 #print(f'adding version to {self.id}')
                 if not r.exists(rumor, True):
                     r.update(rumor)
+                    unique = True
                 #r.info(1)
+        return unique
 
     def random_intro(self):
         rand = random.randint(0, 2)

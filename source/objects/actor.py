@@ -77,6 +77,7 @@ class Actor():
         if rumor == None:
             return
         existing_rumor = None
+        unique_rumor = True
         r_idx = 0
         for r in self.rumors:
             if r.exists(rumor):
@@ -101,7 +102,7 @@ class Actor():
 
         action = rumor.action#self.world.find_action(rumor.action.name)
         # based on personality, choose how much to believe the rumor
-        belief = 0
+        belief = 1
         subj_rel = self.get_relationship(rumor.subject.shortname)
         obj_rels = []
         for obj in rumor.objects:
@@ -136,7 +137,7 @@ class Actor():
                     belief += 1 if admire_val >= rumor.action.r_admire else 0 # if low resepect and disloyal
                     belief += 1 if love_val >= rumor.action.r_love else 0 # if character hates other, believe it
 
-            belief += random.randint(0, 1)
+            #belief += random.randint(0, 1)
             """print(f'ACTION: {action.name} is {"good" if rumor.action.morality > 5 else "bad"}\n'+
                   f'\ttrust: {trust_val} >= {action.r_trust}\n'+
                   f'\tadmire: {admire_val} >= {action.r_admire}\n'+
@@ -146,7 +147,7 @@ class Actor():
             print(f'{rumor.speaker.shortname} is telling {self.shortname} that {rumor.subject.shortname} {rumor.action.name} {rumor.objects[0].shortname}')#q belief: {belief}')
             """
             if speaker_rel != None:
-                if belief > 2:
+                if belief > 3:
                     belief = 2
                     speaker_rel.Trust(5)
                     speaker_rel.Love(3)
@@ -156,9 +157,9 @@ class Actor():
                         clone.versions.append(clone.copy())
                         self.rumors.append(clone)
                     else:
-                        existing_rumor.new_version(rumor, self.world)
+                        unique_rumor = existing_rumor.new_version(rumor, self.world)
                     #print(f'{self.shortname} really believes it!\n')
-                elif belief > 1:
+                elif belief > 2:
                     belief = 1
                     speaker_rel.Trust(2)
                     #rumor.new_version(rumor.copy(), self.world)
@@ -167,9 +168,9 @@ class Actor():
                         clone.versions.append(clone.copy())
                         self.rumors.append(clone)
                     else:
-                        existing_rumor.new_version(rumor, self.world)
+                        unique_rumor = existing_rumor.new_version(rumor, self.world)
                     #print(f'{self.shortname} believes it.\n')
-                elif belief > 0:
+                elif belief > 1:
                     belief = 0
                     speaker_rel.Trust(-3)
                     #print(f'{self.shortname} doesn\'t believe it!\n')
@@ -189,7 +190,7 @@ class Actor():
                 clone.versions.append(clone.copy())
                 self.rumors.append(clone)
             else:
-                existing_rumor.new_version(rumor, self.world)
+                unique_rumor = existing_rumor.new_version(rumor, self.world)
         # relationship between the listener and the subject and objects need to change based on
         # their respective current relationships and the affectors of the action
         # ex: if someone the listener doesn't like does something intimate with someone
@@ -227,7 +228,7 @@ class Actor():
 
         response = f'{self.shortname}: '
         if len(rumor.versions) > 0:
-            response += f'Yeah I heard that from {rumor.versions[len(rumor.versions)-1].speaker.shortname}. ' if existing_rumor != None else ""
+            response += f'Yeah I heard that from {rumor.versions[len(rumor.versions)-1].speaker.shortname}. ' if not unique_rumor else ""
         dont = "doesn\'t" if rumor.objects[0].pronoun != 'T' else "don\'t"
         if not morals_align:
             response += f'I\'m not surprised {rumor.subject.shortname} would do that.' if likes_sub else f'I can\'t believe {rumor.subject.get_pronoun1()} would do that!'
@@ -236,9 +237,11 @@ class Actor():
         else:
             response += f'I\'m glad {rumor.subject.get_pronoun1()} did that!' if likes_sub else f'That\'s surprising!'
             response += f' {rumor.objects[0].shortname} deserved that!' if not likes_obj else f' Good for {rumor.objects[0].shortname}!'
-
         #elif abs(moral) >= 5: # someone with perfect morals (9) and a neutral action (5) shouln't think too differently
         #    belief *= -1
+        if not unique_rumor:
+            belief = 0
+        response += f' ({belief})'
         if subj_rel != None:
             subj_rel.Trust(int(action.subject_trust * belief / 2))
             subj_rel.Admiration(int(action.subject_admire * belief / 2))
@@ -507,24 +510,22 @@ class Actor():
     # tell another character a rumor. pick rumor from ones the agent knows
     def gossip(self):
         #print(f'{self.shortname} is gossiping')
-        listeners = self.current_area.occupants.copy()
-        listeners.remove(self)
-        for l in listeners:
-            available = False
+        listeners = []
+        occupants = self.current_area.occupants.copy()
+        for o in occupants:
             for a in self.world.available_actors:
-                if a.shortname == l.shortname:
-                    available = True
-            if not available or l.shortname == "You":
-                listeners.remove(l)
+                if a.shortname == o.shortname and a.shortname != "You" and a.shortname != self.shortname:
+                    listeners.append(o)
+
         #s=""
         #for a in listeners:
         #    s += f'{a.shortname}, '
-        #print(f'available actors: {s}')
+        #print(f'{self.shortname} can interact with: {s}')
         if len(listeners) == 0:
             self.wait()
             return 0
         listener = self.select_listener(listeners)
-
+        #print(f'{self.shortname} interacted with {listener.shortname}')
         self.world.occupy_actor(listener)
         self.world.occupy_actor(self)
         #self.current_area.occupants.append(self)
