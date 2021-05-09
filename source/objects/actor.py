@@ -386,9 +386,9 @@ class Actor():
             if listener_rel == None:
                 return None
 
-            t_thresh = listener_rel.trust           # threshold for action trust
-            a_thresh = listener_rel.admiration      # threshold for action admiration
-            l_thresh = listener_rel.love            # threshold for action love
+            t_thresh = listener_rel.trust/10          # threshold for action trust
+            a_thresh = listener_rel.admiration/10     # threshold for action admiration
+            l_thresh = listener_rel.love/10           # threshold for action love
             # 2 or more thresholds must be exceeded to tell the rumor
             for rumor in rumors:
                 thresh_ct = 0
@@ -400,7 +400,7 @@ class Actor():
                     thresh_ct += 1
 
                 thresh_ct += random.randint(0,1)
-                if thresh_ct < 1:
+                if thresh_ct < 2:
                     rumors.remove(rumor)
 
         ru = None
@@ -469,7 +469,7 @@ class Actor():
                 else:
                     # choose action that has sum(newaction.affectors) > sum(oldaction.affectors)
                     ru.action = self.mutate_action(ru.action, likes_sub, likes_obj)
-            elif likes_obj:
+            if likes_obj:
                 if self.personality["morality"] < 5:
                     # change the character that is negatively affected with one they dont like.
                     for o in ru.objects:

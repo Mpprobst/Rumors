@@ -20,7 +20,7 @@ AREAS_DIR = "../resources/areas"
 ACTIONS_DIR = "../resources/actions"
 RUMORS_DIR = "../resources/rumors"
 OUT_DIR = "../resources/results"
-SIM_TIME = 0
+SIM_TIME = 200
 
 class World():
     def __init__(self):
@@ -42,7 +42,7 @@ class World():
         self.init_rumors()
 
         self.available_actors = self.actors.copy()
-        #self.info()
+        self.info()
 
         self.player_actor.move(self.find_area("Saloon"))
         for a in range(len(self.actors)):
