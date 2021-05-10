@@ -234,7 +234,7 @@ class Rumor():
             for i in range(len(self.versions)):
                 rumor = self.versions[i]
                 rumor_str = f'\tv{i}: '
-                #rumor_str += f'{rumor.speaker.name}: {rumor.random_intro()} ' if options == None else ""
+                rumor_str += f'{rumor.speaker.shortname} told {rumor.listener.shortname} that '
                 rumor_str += self.prnt_rumor(rumor)
                 print(rumor_str)
         #print(f'+-----------------------+')

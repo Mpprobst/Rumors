@@ -121,21 +121,17 @@ class Actor():
             admire_val = 0
             love_val = 0
             if subj_rel != None:
-                if rumor.action.morality > 5:
-                    trust_val = self.personality["gullible"] - (7 - int(subj_rel.trust/10))
-                    #print(f'gullible: {self.personality["gullible"]} - trust: 9 - {int(subj_rel.trust/10)}' )
-                    admire_val = int(subj_rel.admiration/10) - (7 - self.personality["loyalty"])
-                    love_val = int(subj_rel.love/10) - 4
+                trust_val = self.personality["gullible"] - (5 - int(subj_rel.trust/10))
+                admire_val = int(subj_rel.admiration/10) - (5 - self.personality["loyalty"])
+                love_val = int(subj_rel.love/10)
+                if rumor.action.morality >= 5:
                     belief += 1 if trust_val >= rumor.action.r_trust else 0
                     belief += 1 if admire_val >= rumor.action.r_admire else 0
                     belief += 1 if love_val >= rumor.action.r_love else 0
                 else:
-                    trust_val = self.personality["gullible"] - (7 - int(subj_rel.trust)/10)
-                    admire_val = 9 - int(subj_rel.admiration/10) - (7 - self.personality["loyalty"])
-                    love_val = (9 - int(subj_rel.love/10)) - 3
-                    belief += 1 if trust_val >= rumor.action.r_trust else 0  # gullible characters believe things
-                    belief += 1 if admire_val >= rumor.action.r_admire else 0 # if low resepect and disloyal
-                    belief += 1 if love_val >= rumor.action.r_love else 0 # if character hates other, believe it
+                    belief += 1 if trust_val < rumor.action.r_trust else 0  # gullible characters believe things
+                    belief += 1 if admire_val < rumor.action.r_admire else 0 # if low resepect and disloyal
+                    belief += 1 if love_val < rumor.action.r_love else 0 # if character hates other, believe it
 
             #belief += random.randint(0, 1)
             """print(f'ACTION: {action.name} is {"good" if rumor.action.morality > 5 else "bad"}\n'+
@@ -386,9 +382,9 @@ class Actor():
             if listener_rel == None:
                 return None
 
-            t_thresh = listener_rel.trust           # threshold for action trust
-            a_thresh = listener_rel.admiration      # threshold for action admiration
-            l_thresh = listener_rel.love            # threshold for action love
+            t_thresh = listener_rel.trust/10          # threshold for action trust
+            a_thresh = listener_rel.admiration/10     # threshold for action admiration
+            l_thresh = listener_rel.love/10           # threshold for action love
             # 2 or more thresholds must be exceeded to tell the rumor
             for rumor in rumors:
                 thresh_ct = 0
@@ -400,7 +396,7 @@ class Actor():
                     thresh_ct += 1
 
                 thresh_ct += random.randint(0,1)
-                if thresh_ct < 1:
+                if thresh_ct < 2:
                     rumors.remove(rumor)
 
         ru = None
@@ -469,7 +465,7 @@ class Actor():
                 else:
                     # choose action that has sum(newaction.affectors) > sum(oldaction.affectors)
                     ru.action = self.mutate_action(ru.action, likes_sub, likes_obj)
-            elif likes_obj:
+            if likes_obj:
                 if self.personality["morality"] < 5:
                     # change the character that is negatively affected with one they dont like.
                     for o in ru.objects:

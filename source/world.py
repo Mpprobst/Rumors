@@ -42,7 +42,7 @@ class World():
         self.init_rumors()
 
         self.available_actors = self.actors.copy()
-        #self.info()
+        self.info()
 
         self.player_actor.move(self.find_area("Saloon"))
         for a in range(len(self.actors)):

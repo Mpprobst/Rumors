@@ -8,7 +8,7 @@ gullible 7
 nosy 6
 loyalty 5
 fame 9
-morality 5
+morality 6
 memory 7
 perception 6
 opinion 7
