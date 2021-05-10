@@ -121,21 +121,17 @@ class Actor():
             admire_val = 0
             love_val = 0
             if subj_rel != None:
-                if rumor.action.morality > 5:
-                    trust_val = self.personality["gullible"] - (7 - int(subj_rel.trust/10))
-                    #print(f'gullible: {self.personality["gullible"]} - trust: 9 - {int(subj_rel.trust/10)}' )
-                    admire_val = int(subj_rel.admiration/10) - (7 - self.personality["loyalty"])
-                    love_val = int(subj_rel.love/10) - 4
+                trust_val = self.personality["gullible"] - (5 - int(subj_rel.trust/10))
+                admire_val = int(subj_rel.admiration/10) - (5 - self.personality["loyalty"])
+                love_val = int(subj_rel.love/10)
+                if rumor.action.morality >= 5:
                     belief += 1 if trust_val >= rumor.action.r_trust else 0
                     belief += 1 if admire_val >= rumor.action.r_admire else 0
                     belief += 1 if love_val >= rumor.action.r_love else 0
                 else:
-                    trust_val = self.personality["gullible"] - (7 - int(subj_rel.trust)/10)
-                    admire_val = 9 - int(subj_rel.admiration/10) - (7 - self.personality["loyalty"])
-                    love_val = (9 - int(subj_rel.love/10)) - 3
-                    belief += 1 if trust_val >= rumor.action.r_trust else 0  # gullible characters believe things
-                    belief += 1 if admire_val >= rumor.action.r_admire else 0 # if low resepect and disloyal
-                    belief += 1 if love_val >= rumor.action.r_love else 0 # if character hates other, believe it
+                    belief += 1 if trust_val < rumor.action.r_trust else 0  # gullible characters believe things
+                    belief += 1 if admire_val < rumor.action.r_admire else 0 # if low resepect and disloyal
+                    belief += 1 if love_val < rumor.action.r_love else 0 # if character hates other, believe it
 
             #belief += random.randint(0, 1)
             """print(f'ACTION: {action.name} is {"good" if rumor.action.morality > 5 else "bad"}\n'+
